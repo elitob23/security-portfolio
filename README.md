@@ -5,9 +5,9 @@ Elias' Security Portfolio. Ranging from security projects I have completed on th
 
 # Professional Profile
 
-Target Focus: Network Security / Soc Analysts
+Target Focus: Cybersecurity
 
-Core Competencies: Endpoint Detection & Response, Identity & Access Managementm and SIEM Architecture
+Core Competencies: Vulnerability Management, Identity and Access Management, SIEM (CrowdStrike), Endpoint Detection and Response
 
-Active Qualifications: Cisco Certified Network Associate (CCNA), CompTIA Network+, CompTIA Security+ (In Progress)
+Active Qualifications: Cisco Certified Network Associate (CCNA), CompTIA Network+, CompTIA A+, CompTIA CySA+ (In Progress)
 
