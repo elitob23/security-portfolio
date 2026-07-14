@@ -1,5 +1,5 @@
 # 300+ User Domain-Wide Password Policy Overhaul
-<img width="400" height="400" alt="image" src="https://github.com/user-attachments/assets/14540dd3-a457-466d-9e79-ced061861fce" />
+<img width="767" height="400" alt="image" src="https://github.com/user-attachments/assets/6d796e3a-e578-4b22-9c38-3939b21a4d96" />
 
 ## Situation
 Identity and Access Management. Existing password policy (10 characters,
