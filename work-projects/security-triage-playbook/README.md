@@ -2,6 +2,9 @@
 
 A collection of highly practical, ground-up triage playbooks designed for Security Operations Center (SOC) analysts, IT technicians, and systems administrators. These playbooks provide actionable, structured, and fast-paced workflows to investigate, escalate, or safely close common security detections.
 
+<img width="1024" height="768" alt="image" src="https://github.com/user-attachments/assets/cf88292b-89d4-4ba8-bb4f-5815eb5e1b6d" />
+
+
 ## Why These Playbooks?
 Most security documentation is either too academic or buried in deep vendor manuals. These playbooks focus on **practical application**:
 * **Action-Oriented:** Written for the analyst in the hot seat with a "First 3 Things I Check" methodology.
