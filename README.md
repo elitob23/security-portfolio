@@ -25,8 +25,6 @@ This repo is split into two categories:
 
 Each project folder includes a full README covering the problem, approach, technical detail, and outcome.
 
-General self-hosted infrastructure (Pi-hole, Jellyfin, etc.) isn't part of this portfolio — that lives in a separate [homelab-infra repo](#).
-
 ## Work Projects
 
 | Project | Summary | Status |
@@ -56,8 +54,6 @@ General self-hosted infrastructure (Pi-hole, Jellyfin, etc.) isn't part of this 
 
 ## Tech Stack
 
-## Tech Stack
-
 **SIEM & Detection:** CrowdStrike Falcon (EDR) · Wazuh · MITRE ATT&CK
 
 **Identity & Access Management:** Microsoft Entra ID · Conditional Access · Zero Trust
@@ -66,7 +62,7 @@ General self-hosted infrastructure (Pi-hole, Jellyfin, etc.) isn't part of this 
 
 **Endpoint & Vulnerability Management:** Microsoft Intune · CrowdStrike Falcon (EDR) · PowerShell
 
-**Email Security:** Proofpoint, Egress
+**Email Security:** Proofpoint
 
 **Automation & Scripting:** PowerShell
 
