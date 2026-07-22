@@ -30,9 +30,10 @@ Each project folder includes a full README covering the problem, approach, techn
 | Project | Summary | Status |
 |---|---|---|
 | [Credential Compromise Containment](work-projects/credential-compromise-containment) | Contained a live credential compromise across 300+ endpoints, 5 locations, in under 10 minutes via CrowdStrike Falcon | ✅ Complete |
-| [Domain-Wide Password Policy Overhaul](work-projects/password-policy) | Redesigned password policy (15-char minimum, NIST-aligned) and rolled out via PowerShell to 300+ accounts | ✅ Complete |
+| [Domain-Wide Password Policy Overhaul](work-projects/password-policy) | Redesigned password policy (15-char minimum) and rolled out via PowerShell & GPO to 300+ accounts | ✅ Complete |
 | [JIT Access Model](work-projects/jit-access-model) | Deployed a just-in-time access model in CrowdStrike Falcon | ✅ Complete |
 | [Security Triage Playbook](work-projects/security-triage-playbook) | Built the triage playbook my workflow runs on | ✅ Complete |
+| [Fortinet FortiGate 60F Firewall Replacement](work-projects/firewall-replacement) | Replaced a critical firewall in an enterprise setting | ✅ Complete |
 | [SOAR Compromised-Credential Workflow](work-projects/soar-compromised-credential-workflow) | Falcon Fusion SOAR detection-to-ticket automation | 🔄 In Progress |
 | [Conditional Access / Zero Trust Baseline](work-projects/conditional-access-zero-trust-baseline) | Entra ID Conditional Access policy review and hardening | 🔄 In Progress |
 | [FQL Threat Hunting Library](work-projects/fql-threat-hunting-library) | Falcon FQL hunting queries mapped to MITRE ATT&CK | 📋 Planned |
