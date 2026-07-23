@@ -60,6 +60,10 @@ Each project folder includes a full README covering the problem, approach, techn
 
 **Infrastructure & Virtualization:** Proxmox · Docker · VMWare Esxi
 
+## Contact
+LinkedIn: [Elias Tobin](https://ca.linkedin.com/in/eliastobin)
+Email: elitob23@gmail.com
+
 ## License
 
 MIT — see [LICENSE](LICENSE)
