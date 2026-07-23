@@ -1,6 +1,6 @@
 # Active Playbooks
 
-# DETECTION NAME: Access from IP with bad reputation
+1. # DETECTION NAME: Access from IP with bad reputation
 
 ## WHAT IT MEANS:
 
@@ -50,7 +50,7 @@ An alert flagged an outbound connection to an IP address located in a Swiss host
 
 
 
-# DETECTION NAME: Suspicious web-based activity (ML)
+2. # DETECTION NAME: Suspicious web-based activity (ML)
 
 ## WHAT IT MEANS:
 
@@ -94,7 +94,7 @@ Escalate Immediately if:
 An ML-based alert triggered for anomalous web access originating from an IP address geolocated to Mexico. Investigation of the directory logs showed this user had historically only logged in from Canada. There was no approved travel on record. No sensitive resources were downloaded, but because the location was highly anomalous and unverified, the session was terminated, a password reset was enforced, and the user was contacted to re-verify their identity.
 
 
-# DETECTION NAME: Access from multiple locations concurrently
+3. # DETECTION NAME: Access from multiple locations concurrently
 
 ## WHAT IT MEANS:
 A single user account successfully authenticated from two geographically distinct locations within a timeframe that is physically impossible to travel (often referred to as an "impossible travel" alert). This strongly suggests compromised credentials or session hijacking.
@@ -134,7 +134,7 @@ Escalate Immediately if:
 An alert flagged a user account logging in from Mexico and Canada within a 10-minute window. Analysis showed the user was on an approved vacation in Mexico and successfully authenticated to the corporate SSL VPN gateway (which routed their traffic to the Canadian datacenter) while their personal mobile device simultaneously checked emails using the local resort Wi-Fi. Because both IPs were verified as legitimate user actions under travel conditions, the alert was documented and marked as benign.
 
 
-# DETECTION NAME: Anomalous RPC (account discovery)
+4. # DETECTION NAME: Anomalous RPC (account discovery)
 
 ## WHAT IT MEANS:
 
