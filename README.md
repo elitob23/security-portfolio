@@ -6,7 +6,7 @@ Elias' Security Portfolio — security projects completed on the job, alongside 
 
 ## Professional Profile
 
-**Target Focus:** Cybersecurity
+**Target Focus:** Cybersecurity / Vulnerability Management / Network Security / Detection Engineering
 
 **Core Competencies:** Identity and Access Management, Vulnerability Management, SIEM (CrowdStrike Falcon, Wazuh), Endpoint Detection & Response, Network Security, Threat Hunting and Intelligence, Scripting (PowerShell)
 
@@ -21,7 +21,7 @@ Elias' Security Portfolio — security projects completed on the job, alongside 
 This repo is split into two categories:
 
 - **`work-projects/`** — Security projects completed in a production environment. Write-ups are sanitized, but reflect real scope and outcomes.
-- **`homelab/`** — Independent projects built and run in my personal Proxmox homelab, including SIEM deployment, network segmentation, and purple-team projects.
+- **`homelab/`** — Independent projects built and run in my personal Proxmox homelab.
 
 Each project folder includes a full README covering the problem, approach, technical detail, and outcome.
 
@@ -44,7 +44,7 @@ Each project folder includes a full README covering the problem, approach, techn
 
 | Project | Summary | Status |
 |---|---|---|
-| [VLAN Segmentation](homelab/vlan-segmentation-project) | Six-VLAN network segmentation design | ✅ Complete |
+| [VLAN Segmentation](homelab/vlan-segmentation-project) | Six-VLAN network segmentation design | 🔄 In Progress |
 | [Wazuh SIEM Deployment](homelab/wazuh-siem-deployment) | Single-node Wazuh deployment on Proxmox | 🔄 In Progress |
 | [GOAD Purple Team Loop](homelab/goad-purple-team-loop) | GOAD attacks + Atomic Red Team, detected and analyzed in Wazuh | 📋 Planned |
 | [SIEM Dashboard](homelab/siem-dashboard) | Log correlation, alerting, and MITRE ATT&CK-mapped playbooks | 📋 Planned |
@@ -68,10 +68,6 @@ Each project folder includes a full README covering the problem, approach, techn
 **Automation & Scripting:** PowerShell
 
 **Infrastructure & Virtualization:** Proxmox · Docker · VMWare Esxi
-
-**Frameworks & Standards:** NIST SP 800-53 · SOC 2 TYPE 2 · MITRE ATT&CK
-
-**Currently Building:** Python · Linux Hardening · Splunk
 
 ## License
 
