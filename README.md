@@ -6,7 +6,7 @@ Elias' Security Portfolio - security projects completed on the job, alongside in
 
 ## Professional Profile
 
-**Target Focus:** Cybersecurity / Vulnerability Management / Network Security / Detection Engineering
+**Target Focus:** Security Engineering
 
 **Core Competencies:** Identity and Access Management, Vulnerability Management, SIEM (CrowdStrike Falcon, Wazuh), Endpoint Detection & Response, Network Security, Threat Hunting and Intelligence, Scripting (PowerShell)
 
