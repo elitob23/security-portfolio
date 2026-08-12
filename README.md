@@ -1,14 +1,14 @@
 # security-portfolio
 
-Elias' Security Portfolio - security projects completed on the job, alongside independent projects built in my homelab.
+This is where I keep the security work I'm actually proud of. Real industry backed projects, as well as projects I have completed on my own time because I am extremely interested in the field. Always continuously learning!.
 
 <img width="500" height="500" alt="nxKX671" src="https://github.com/user-attachments/assets/aa85b826-0041-42b3-955b-77938cfe494f" />
 
 ## Professional Profile
 
-**Target Focus:** Security Engineering
+**Target Focus:** Cybersecurity Analyst / Security Engineering
 
-**Core Competencies:** Identity and Access Management, Vulnerability Management, SIEM (CrowdStrike Falcon, Wazuh), Endpoint Detection & Response, Network Security, Threat Hunting and Intelligence, Scripting (PowerShell)
+**Core Competencies:** Identity and Access Management, Vulnerability Management, SIEM (CrowdStrike Falcon, Wazuh), Endpoint Detection & Response, Network Security, Threat Hunting and Intelligence, Scripting (PowerShell), Ethical Hacking
 
 **Education** Diploma in IT System Administration (With Honors)
 
@@ -20,8 +20,8 @@ Elias' Security Portfolio - security projects completed on the job, alongside in
 
 This repo is split into two categories:
 
-- **`work-projects/`** - Security projects completed in a production environment. Write-ups are sanitized, but reflect real scope and outcomes.
-- **`homelab/`** - Independent projects built and run in my personal Proxmox homelab.
+- **`work-projects/`** - real security work from my day job. Details are sanitized, but the scope and the outcomes are exactly what happened.
+- **`homelab/`** - Independent projects built and run in my personal homelab, as well as HackTheBox Write Ups.
 
 Each project folder includes a full README covering the problem, approach, technical detail, and outcome.
 
@@ -44,21 +44,6 @@ Each project folder includes a full README covering the problem, approach, techn
 | VLAN Segmentation | Six-VLAN network segmentation design | 🔄 In Progress |
 | Wazuh SIEM Deployment + OpenVAS | Wazuh deployment on Ubuntu Server + OpenVAS Vulnerability Scanner | 🔄 In Progress |
 
-## Tech Stack
-
-**SIEM & Detection:** CrowdStrike Falcon (EDR) · Wazuh · MITRE ATT&CK
-
-**Identity & Access Management:** Microsoft Entra ID · Conditional Access · Zero Trust
-
-**Network Security:** FortiGate · Aruba · VLANs · Routing & Switching · OPNsense
-
-**Endpoint & Vulnerability Management:** Microsoft Intune · CrowdStrike Falcon (EDR) · PowerShell
-
-**Email Security:** Proofpoint
-
-**Automation & Scripting:** PowerShell
-
-**Infrastructure & Virtualization:** Proxmox · Docker · VMWare Esxi
 
 ## Contact
 LinkedIn: [Elias Tobin](https://ca.linkedin.com/in/eliastobin)
