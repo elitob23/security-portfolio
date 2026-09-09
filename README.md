@@ -40,8 +40,8 @@ Each project folder includes a full README covering the problem, approach, techn
 
 | Project | Summary | Status |
 |---|---|---|
-| VLAN Segmentation | Six-VLAN network segmentation design | 🔄 In Progress |
-| Wazuh SIEM Deployment + OpenVAS | Wazuh deployment on Ubuntu Server + OpenVAS Vulnerability Scanner | 🔄 In Progress |
+| VLAN Segmentation | Six-VLAN network segmentation design | In Progress |
+| Wazuh SIEM Deployment + OpenVAS | Wazuh deployment on Ubuntu Server + OpenVAS Vulnerability Scanner | In Progress |
 
 
 ## Contact
