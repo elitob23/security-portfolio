@@ -2,7 +2,7 @@
 
 This is where I keep the security work I'm actually proud of. Industry backed projects, as well as projects I have completed on my own time.
 
-<img width="500" height="500" alt="nxKX671" src="https://github.com/user-attachments/assets/aa85b826-0041-42b3-955b-77938cfe494f" />
+<img width="300" height="300" alt="nxKX671" src="https://github.com/user-attachments/assets/aa85b826-0041-42b3-955b-77938cfe494f" />
 
 ## Professional Profile
 
@@ -34,8 +34,7 @@ Each project folder includes a full README covering the problem, approach, techn
 | [Domain-Wide Password Policy Overhaul](work-projects/password-policy) | Redesigned password policy (15-char minimum) and rolled out via PowerShell & GPO to 300+ accounts | ✅ Complete |
 | [JIT Access Model](work-projects/jit-access-model) | Deployed a just-in-time access model in CrowdStrike Falcon | ✅ Complete |
 | [Security Triage Playbook](work-projects/security-triage-playbook) | Built the triage playbook my workflow runs on | ✅ Complete |
-| [Fortinet FortiGate 60F Firewall Replacement](work-projects/firewall-replacement) | Replaced a critical firewall in an enterprise setting | ✅ Complete |
-| [SOAR Compromised-Credential Workflow](work-projects/soar-compromised-credential-workflow) | Falcon Fusion SOAR detection-to-ticket automation | 🔄 In Progress |
+
 
 ## Homelab
 
