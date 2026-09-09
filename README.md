@@ -1,6 +1,6 @@
 # security-portfolio
 
-This is where I keep the security work I'm actually proud of. Real industry backed projects, as well as projects I have completed on my own time because I am extremely interested in the field. Always continuously learning!.
+This is where I keep the security work I'm actually proud of. Industry backed projects, as well as projects I have completed on my own time.
 
 <img width="500" height="500" alt="nxKX671" src="https://github.com/user-attachments/assets/aa85b826-0041-42b3-955b-77938cfe494f" />
 
@@ -8,7 +8,7 @@ This is where I keep the security work I'm actually proud of. Real industry back
 
 **Target Focus:** Cybersecurity Analyst / Security Engineering
 
-**Core Competencies:** Identity and Access Management, Vulnerability Management, SIEM (CrowdStrike Falcon, Wazuh), Endpoint Detection & Response, Network Security, Threat Hunting and Intelligence, Scripting (PowerShell), Ethical Hacking
+**Core Competencies:** Identity and Access Management, Vulnerability Management, SIEM (CrowdStrike Falcon, Wazuh), Endpoint Detection & Response, Network Security, Threat Hunting, Scripting (PowerShell), Ethical Hacking (HackTheBox)
 
 **Education** Diploma in IT System Administration (With Honors)
 
