@@ -15,7 +15,7 @@ This folder exists to:
 
 ## Structure
 
-Each query lives in its own `.cql` file, named in lowercase with hyphens — for example `suspicious-powershell-encodedcommand.cql`.
+Each query lives in its own `.cql` file, named in lowercase with hyphens - for example `suspicious-powershell-encodedcommand.cql`.
 
 ## Query file format
 
