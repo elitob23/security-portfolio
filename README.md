@@ -34,6 +34,7 @@ Each project folder includes a full README covering the problem, approach, techn
 | [Domain-Wide Password Policy Overhaul](work-projects/password-policy) | Redesigned password policy (15-char minimum) and rolled out via PowerShell & GPO to 300+ accounts | ✅ Complete |
 | [JIT Access Model](work-projects/jit-access-model) | Deployed a just-in-time access model in CrowdStrike Falcon | ✅ Complete |
 | [Security Triage Playbook](work-projects/security-triage-playbook) | Built the triage playbook my workflow runs on | ✅ Complete |
+| [CrowdStrike Query Language (CQL)](work-projects/cql-queries) | CQL Queries for detection engineering, threat hunting, and investigation in CrowdStrike Falcon Next-Gen SIEM | ✅ Complete |
 
 
 ## Homelab
