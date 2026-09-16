@@ -1,0 +1,9 @@
+# Requirements for portscanner.py
+#
+# Python 3.10+ is required (uses built-in generic type hints like list[int]).
+#
+# No third-party packages are needed. The script only uses the standard library:
+#   argparse, socket, sys, time, concurrent.futures
+#
+# Install with (no-op, kept for consistency):
+#   pip install -r requirements.txt

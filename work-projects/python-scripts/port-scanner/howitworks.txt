@@ -1,0 +1,300 @@
+HOW PORTSCANNER.PY WORKS
+========================
+
+A plain-English walkthrough of the script, top to bottom.
+
+
+------------------------------------------------------------
+THE BIG IDEA
+------------------------------------------------------------
+
+A "port" is a numbered door on a computer (1 to 65535). Programs listen
+behind certain doors: a web server usually listens on 80 or 443, SSH on 22.
+
+To find out if a door is open, the script tries to connect to it:
+  - If the connection works, something is listening, so the port is OPEN.
+  - If it's refused or times out, the port is closed or blocked.
+
+The script does this for every port in the range you pick. It checks many
+ports at the same time so it finishes faster, then prints the open ones.
+
+
+------------------------------------------------------------
+HOW TO RUN IT
+------------------------------------------------------------
+
+  python3 portscanner.py 127.0.0.1             ports 1-1024 (default)
+  python3 portscanner.py 127.0.0.1 22          only port 22
+  python3 portscanner.py 127.0.0.1 1 65535     every port
+
+Only scan machines you own or have permission to test.
+
+
+------------------------------------------------------------
+PART 1: THE DOCSTRING (the text in triple quotes at the top)
+------------------------------------------------------------
+
+A string in triple quotes at the very top of a file is called a
+"docstring". Python doesn't run it. It's a description for people reading
+the file: what the script does, what it needs, and how to run it.
+
+
+------------------------------------------------------------
+PART 2: IMPORTS
+------------------------------------------------------------
+
+    import socket
+    import sys
+    from concurrent.futures import ThreadPoolExecutor
+
+"import" loads code that comes with Python so you can use it. All of
+these are built in, which is why nothing needs to be installed.
+
+  socket              Makes network connections. This does the real
+                      port checking.
+  sys                 Reads what you typed on the command line, and
+                      lets the script exit early.
+  ThreadPoolExecutor  Runs many port checks at the same time.
+
+Lines starting with # are "comments". Python ignores them. They're notes
+for people reading the code.
+
+
+------------------------------------------------------------
+PART 3: READING WHAT YOU TYPED
+------------------------------------------------------------
+
+    if len(sys.argv) < 2:
+        print("Usage: python3 portscanner.py <target> [start_port] [end_port]")
+        sys.exit(1)
+
+    target = sys.argv[1]
+
+sys.argv is a list of the words you typed to run the script.
+If you type:  python3 portscanner.py 127.0.0.1 20 25
+then sys.argv is:  ["portscanner.py", "127.0.0.1", "20", "25"]
+
+  sys.argv[0]  is always the script's own name
+  sys.argv[1]  is the target
+  sys.argv[2]  is the start port (if you gave one)
+  sys.argv[3]  is the end port (if you gave one)
+
+Lists start counting at 0, not 1.
+
+  len(sys.argv) counts the items in the list. If it's less than 2, you
+  didn't give a target, so the script prints how to use it and stops.
+
+  sys.exit(1) ends the script right away. The 1 tells your terminal
+  "something went wrong". 0 would mean success.
+
+
+------------------------------------------------------------
+PART 4: PICKING THE PORTS
+------------------------------------------------------------
+
+    start_port = 1
+    end_port = 1024
+    if len(sys.argv) >= 3:
+        start_port = int(sys.argv[2])
+        end_port = start_port
+    if len(sys.argv) >= 4:
+        end_port = int(sys.argv[3])
+
+  - It starts with the defaults: ports 1 to 1024.
+  - If you typed a start port, it uses that. It also sets end_port to the
+    same number, so typing just one port scans only that port.
+  - If you also typed an end port, it uses that too.
+  - Everything in sys.argv is text. int() turns the text "22" into the
+    number 22. (If you type letters instead of a number, int() will crash
+    with a ValueError.)
+
+    if start_port < 1 or end_port > 65535 or start_port > end_port:
+        print("Ports must be between 1 and 65535, and start must be less than end")
+        sys.exit(1)
+
+  "or" means: if ANY of these are true, run the code below. This catches
+  ports that don't exist and ranges typed backwards (like 100 20).
+
+
+------------------------------------------------------------
+PART 5: TURNING A HOSTNAME INTO AN IP ADDRESS
+------------------------------------------------------------
+
+    try:
+        ip = socket.gethostbyname(target)
+    except socket.gaierror:
+        print("Could not find host:", target)
+        sys.exit(1)
+
+  gethostbyname() does a DNS lookup. It turns a name like "localhost"
+  into an IP address like "127.0.0.1". If you already gave an IP, it
+  gives the same IP back.
+
+  try / except means: "Try this. If that specific error happens, do this
+  instead of crashing." If the name can't be found, Python raises a
+  "gaierror", so the script prints a message and stops.
+
+
+------------------------------------------------------------
+PART 6: scan_port() - checking one port
+------------------------------------------------------------
+
+    open_ports = []
+
+    def scan_port(port):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(0.5)
+        result = sock.connect_ex((ip, port))
+        sock.close()
+        if result == 0:
+            open_ports.append(port)
+
+  open_ports = []
+      An empty list. Every open port gets added here.
+
+  def scan_port(port):
+      "def" creates a function, which is a named block of code you can
+      reuse. This one checks ONE port.
+
+  socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      Creates a "socket", which is one end of a network connection.
+        AF_INET      = use IPv4 addresses (like 192.168.1.1)
+        SOCK_STREAM  = use TCP, the kind of connection most services use
+
+  sock.settimeout(0.5)
+      Don't wait forever. If there's no answer in half a second, give up.
+
+  sock.connect_ex((ip, port))
+      Tries to connect. Notice the double brackets: the address is passed
+      as one "tuple" (ip, port).
+      It returns a number instead of crashing:
+        0             = connected (port is open)
+        anything else = failed (closed, blocked, or timed out)
+
+  sock.close()
+      Closes the connection. If you skip this, you can end up with
+      thousands of connections left open.
+
+  if result == 0: open_ports.append(port)
+      If the port was open, add it to the list.
+      Note: == compares two values. A single = stores a value.
+
+
+------------------------------------------------------------
+PART 7: SCANNING MANY PORTS AT ONCE
+------------------------------------------------------------
+
+    with ThreadPoolExecutor(max_workers=100) as pool:
+        pool.map(scan_port, range(start_port, end_port + 1))
+
+  WHY: If each port takes up to 0.5 seconds and you check 1024 ports one
+  at a time, that could take over 8 minutes. Checking 100 at once is much
+  faster.
+
+  THE ANALOGY: Imagine a call center with 100 workers and a stack of phone
+  numbers to call. Each worker takes a number, makes the call, and grabs
+  the next one.
+
+  ThreadPoolExecutor(max_workers=100)
+      Hires 100 workers ("threads") that all work at the same time.
+
+  range(start_port, end_port + 1)
+      Makes the numbers from start_port to end_port. The +1 is needed
+      because range() stops BEFORE its end number.
+      range(1, 5) gives 1, 2, 3, 4.
+
+  pool.map(scan_port, ...)
+      Runs scan_port() once for every number in the range, spread across
+      the workers. Notice scan_port has no brackets here. You're handing
+      the pool the function itself, and it calls it for you.
+
+  with ... as pool:
+      A "with" block cleans up after itself. The script waits here until
+      every port has been checked, then the workers shut down.
+
+
+------------------------------------------------------------
+PART 8: PRINTING THE RESULTS
+------------------------------------------------------------
+
+    if len(open_ports) == 0:
+        print("No open ports found")
+
+    for port in sorted(open_ports):
+        try:
+            service = socket.getservbyport(port, "tcp")
+        except OSError:
+            service = "unknown"
+        print(f"Port {port} is open ({service})")
+
+    print("Scan complete")
+
+  if len(open_ports) == 0:
+      If the list is empty, nothing was open.
+
+  for port in sorted(open_ports):
+      A "for" loop repeats for each item in a list. sorted() puts the
+      ports in order first, because the workers finish in random order.
+      (If the list is empty, the loop just doesn't run.)
+
+  socket.getservbyport(port, "tcp")
+      Looks up the usual name for a port (22 -> "ssh", 80 -> "http").
+      If the port isn't in your computer's list, it raises an OSError, so
+      "unknown" is used instead.
+      This is only the port's USUAL service. It doesn't prove what is
+      actually running there.
+
+  f"Port {port} is open ({service})"
+      An "f-string". The f before the quotes lets you put variables inside
+      text using {curly braces}.
+
+
+------------------------------------------------------------
+THE WHOLE FLOW IN ONE PICTURE
+------------------------------------------------------------
+
+  You type:  python3 portscanner.py localhost 20 25
+
+      |
+      v
+  sys.argv                ->  target="localhost", start=20, end=25
+      |
+      v
+  Check the ports are valid
+      |
+      v
+  gethostbyname()         ->  "127.0.0.1"
+      |
+      v
+  ThreadPoolExecutor runs scan_port() on ports 20-25 at the same time
+      |
+      v
+  Open ports get added to open_ports  ->  e.g. [22]
+      |
+      v
+  Print each open port with its service name, then "Scan complete"
+
+
+------------------------------------------------------------
+PYTHON CONCEPTS USED (quick reference)
+------------------------------------------------------------
+
+  import              Load code from another module
+  # comment           A note Python ignores
+  variable            A name that stores a value: port = 22
+  string              Text, e.g. "hello"
+  int()               Turn text into a whole number
+  f-string            f"Port {port}" puts variables into text
+  list                Ordered collection: [1, 2, 3]
+  tuple               Fixed group of values: ("127.0.0.1", 80)
+  len()               Count the items in a list
+  if                  Make a decision
+  or                  True if any of the conditions is true
+  for loop            Repeat for each item
+  range()             Make a sequence of numbers
+  def                 Create a function
+  try / except        Handle errors without crashing
+  with                Automatically clean up when done
+  threads             Run several tasks at the same time
+  sys.argv            The words typed on the command line
+  sys.exit()          Stop the script
