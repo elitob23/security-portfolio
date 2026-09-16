@@ -1,0 +1,75 @@
+# ---- Virtual environments ----
+.venv/
+venv/
+env/
+ENV/
+.virtualenv/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-log.txt
+
+# ---- Secrets & config ----
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+credentials.json
+secrets.json
+config.local.*
+token.txt
+
+# ---- Security tooling output (sanitize before ever committing) ----
+*.pcap
+*.pcapng
+*.evtx
+exports/
+dumps/
+scan-results/
+*-export.csv
+*-report.json
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- Testing & coverage ----
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Jupyter ----
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ---- Editors / IDE ----
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ---- OS junk ----
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
+
+# ---- Node (if you add any JS tooling) ----
+node_modules/
+npm-debug.log*

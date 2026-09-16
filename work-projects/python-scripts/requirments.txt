@@ -1,0 +1,11 @@
+# Shared Python dependencies for the scripts in this folder.
+#
+# No third-party packages are required yet. Dependencies are added here
+# as scripts that need them are committed.
+#
+# When a script needs a package, add it below with a pinned version and a
+# comment naming the script that uses it, for example:
+#   requests==2.32.3    # parse-falcon-detections.py
+#
+# Install with:
+#   pip install -r requirements.txt
