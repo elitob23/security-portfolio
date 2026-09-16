@@ -1,121 +1,136 @@
-workflow_documentation:
-  name: "Falcon OverWatch Detection Notification and Remediation - All Detection Types"
-  version: "~1"  # from trigger version constraint
-  last_modified: "2026-08-12"  # as reported by the workflow metadata
+# Falcon OverWatch Detection: Notification & Remediation
 
-  overview:
-    purpose: >-
-      Automate analyst notification and baseline response actions when a Falcon detection
-      is attributed to Falcon OverWatch (MITRE tactic = "Falcon Overwatch").
-    threat_mitigated: >-
-      Adversary activity identified/triaged by Falcon OverWatch across detection types
-      (e.g., EPP, IDP, and OverWatch generic detections).
-    expected_operational_outcome:
-      - Detection is immediately moved to an active triage state (in_progress)
-      - Analysts are notified via email with context
-      - Related user and endpoint are added to watchlists for heightened monitoring
-      - Where applicable (EPP on workstations), the endpoint is contained to reduce spread
-      - The detection is annotated with a workflow comment documenting actions taken
+A Falcon Fusion SOAR workflow that automatically triages, notifies on, and contains detections attributed to **Falcon OverWatch**, across all detection types (EPP, IDP, and OverWatch generic).
 
-  prerequisites:
-    crowdstrike_modules:
-      - Falcon Fusion SOAR
-      - Falcon OverWatch
-      - Falcon Insight XDR (for detections/visibility)
-      - Falcon Prevent (EPP)  # required for EPP branch actions like containment
-      - Falcon Identity Protection (IDP)  # required if IDP detections are in-scope
-    integrations:
-      - Email (Fusion email action configured: SMTP/O365/Gmail depending on your tenant)
-    permissions_in_falcon:
-      - Ability to update detection status and add comments
-      - Ability to add users/endpoints to watchlists
-      - Ability to contain hosts (at least for workstation endpoints)
+| | |
+|---|---|
+| **Platform** | CrowdStrike Falcon Fusion SOAR |
+| **Trigger** | Signal → Detection |
+| **Workflow version** | `~1` (from the trigger version constraint) |
+| **Last modified** | 2026-08-12 |
 
-  triggers_and_conditions:
-    trigger:
-      type: "Signal"
-      name: "Detection"
-      fires_when: "A detection occurs"
-    primary_filter:
-      field: "mitre_tactic"
-      operator: "equals"
-      value: "Falcon Overwatch"
-    conditional_branching:
-      - branch_key: "detection_product"
-        branches:
-          - name: "EPP"
-            additional_conditions:
-              - field: "sensor_host_type"
-                operator: "equals"
-                value: "Workstation"
-                effect: "Allows containment path"
-          - name: "IDP"
-            additional_conditions: []
-          - name: "OverWatch Generic Detection"
-            additional_conditions: []
-    parallelism:
-      description: "Multiple actions execute in parallel within each detection-type branch."
+---
 
-  action_steps:
-    common_initial_actions:
-      - step: 1
-        action: "Set detection status"
-        value: "in_progress"
-      - step: 2
-        action: "Send email notification"
-        recipients: "Security analysts (configured distribution)"
-      - step: 3
-        action: "Add user to watchlist"
-        source: "User referenced by detection"
-      - step: 4
-        action: "Add endpoint to watchlist"
-        source: "Host referenced by detection"
+## Overview
 
-    epp_branch:
-      when: "detection_product == EPP"
-      workstation_path:
-        when: "sensor_host_type == Workstation"
-        actions:
-          - step: 5
-            action: "Contain device"
-            notes: "Only for workstation endpoints per workflow logic"
-          - step: 6
-            action: "Add comment to detection"
-            comment_purpose: "Record containment + notifications/watchlist actions"
-      non_workstation_path:
-        when: "sensor_host_type != Workstation"
-        actions:
-          - step: 5
-            action: "Add comment to detection"
-            comment_purpose: "Record notifications/watchlist actions (no containment)"
+### Purpose
 
-    idp_branch:
-      when: "detection_product == IDP"
-      actions:
-        - step: 5
-          action: "Add comment to detection"
-          comment_purpose: "Record notifications/watchlist actions"
+When Falcon OverWatch threat hunters flag adversary activity, response time matters. This workflow removes the manual first steps: it moves the detection into triage, alerts analysts, raises monitoring on the affected user and host, and contains the host when it is safe to do so.
 
-    overwatch_generic_branch:
-      when: "detection_product == OverWatch Generic Detection"
-      actions:
-        - step: 5
-          action: "Add comment to detection"
-          comment_purpose: "Record notifications/watchlist actions"
+### Threat Mitigated
 
-  required_api_scopes:
-    note: >-
-      Exact scopes can vary by action version and tenant configuration.
-      Below are the typical Falcon OAuth scopes needed to perform the described actions.
-    scopes:
-      - "fusion:write"           # manage/execute Fusion workflows (name may vary by tenant)
-      - "detections:write"       # set detection status, add detection comments
-      - "watchlists:write"       # add users/endpoints to watchlists
-      - "hosts:write"            # contain host/device (host containment)
-      - "identity-protection:write"  # if IDP entities/actions are invoked in your branch
+Adversary activity that Falcon OverWatch identified or triaged, across EPP, IDP, and OverWatch generic detections.
 
-  validation_checks:
-    - "Confirm the email integration used by the workflow is configured and permitted."
-    - "Confirm containment is allowed for the relevant workstation groups."
-    - "Confirm watchlist targets (user + host) are resolvable from detection context."
+### Outcomes
 
+- The detection moves straight to an active triage state (`in_progress`).
+- Analysts get an email notification with the detection context.
+- The related **user** and **endpoint** are added to watchlists for closer monitoring.
+- **EPP detections on workstations** trigger network containment to limit spread.
+- A comment is added to the detection listing every action taken.
+
+---
+
+## Workflow Logic
+
+```mermaid
+flowchart TD
+    A[Detection signal] --> B{MITRE tactic = Falcon Overwatch?}
+    B -- No --> Z[End]
+    B -- Yes --> C[Common actions<br/>Set status: in_progress<br/>Email analysts<br/>Watchlist user<br/>Watchlist endpoint]
+    C --> D{Detection product}
+    D -- EPP --> E{Host type = Workstation?}
+    E -- Yes --> F[Contain device] --> G[Comment: containment + notifications]
+    E -- No --> H[Comment: notifications only]
+    D -- IDP --> I[Comment: notifications]
+    D -- OverWatch Generic --> J[Comment: notifications]
+```
+
+### Trigger & Filter
+
+| Setting | Value |
+|---|---|
+| Trigger type | `Signal` |
+| Trigger name | `Detection` |
+| Fires when | A detection occurs |
+| Filter | `mitre_tactic` **equals** `Falcon Overwatch` |
+
+### Branching
+
+The workflow branches on `detection_product`. Actions within each branch run in parallel.
+
+| Branch | Extra condition | Containment |
+|---|---|---|
+| EPP | `sensor_host_type` equals `Workstation` | ✅ Workstations only |
+| IDP | None | ❌ |
+| OverWatch Generic Detection | None | ❌ |
+
+---
+
+## Action Steps
+
+### Steps 1–4: Common to All Branches
+
+| Step | Action | Details |
+|---|---|---|
+| 1 | Set detection status | `in_progress` |
+| 2 | Send email notification | Security analyst distribution list |
+| 3 | Add user to watchlist | User referenced by the detection |
+| 4 | Add endpoint to watchlist | Host referenced by the detection |
+
+### Step 5 and Later: By Branch
+
+| Branch | Step 5 | Step 6 |
+|---|---|---|
+| **EPP, Workstation** | Contain device | Add a comment recording containment, notifications, and watchlist actions |
+| **EPP, Non-workstation** | Add a comment recording notifications and watchlist actions (no containment) | None |
+| **IDP** | Add a comment recording notifications and watchlist actions | None |
+| **OverWatch Generic** | Add a comment recording notifications and watchlist actions | None |
+
+> **Why workstations only?** Automatically containing servers or domain controllers can cause outages, so non-workstation hosts are left for an analyst to decide.
+
+---
+
+## Prerequisites
+
+### CrowdStrike Modules
+
+- Falcon Fusion SOAR
+- Falcon OverWatch
+- Falcon Insight XDR (detections and visibility)
+- Falcon Prevent (EPP): required for the containment branch
+- Falcon Identity Protection (IDP): required if IDP detections are in scope
+
+### Integrations
+
+- **Email:** Fusion email action configured (SMTP, O365, or Gmail, depending on the tenant)
+
+### Falcon Permissions
+
+The workflow's execution context must be able to:
+
+- Update detection status and add comments
+- Add users and endpoints to watchlists
+- Contain hosts (at least workstation endpoints)
+
+### API Scopes
+
+Typical Falcon OAuth scopes for these actions. Exact scope names depend on the action version and tenant configuration, so check them against your tenant.
+
+| Scope | Used for |
+|---|---|
+| `fusion:write` | Managing and running Fusion workflows |
+| `detections:write` | Setting detection status and adding comments |
+| `watchlists:write` | Adding users and endpoints to watchlists |
+| `hosts:write` | Host containment |
+| `identity-protection:write` | IDP entity actions (if used) |
+
+---
+
+## Validation Checklist
+
+Before enabling the workflow:
+
+- [ ] The email integration is configured and allowed to send.
+- [ ] Containment is allowed for the relevant workstation host groups.
+- [ ] Watchlist targets (user and host) can be resolved from the detection context.
