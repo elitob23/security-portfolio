@@ -28,7 +28,7 @@ This folder exists to:
 
 | Script | Summary | Category | Status |
 |---|---|---|---|
-| _No scripts yet_ | Scripts are added here as they're completed | — | 🚧 In Progress |
+| [portscanner.py](port-scanner/portscanner.py) | Multithreaded TCP port scanner that lists open ports and their common service names. Standard library only. See [howitworks.txt](port-scanner/howitworks.txt) for a line-by-line walkthrough | Utilities | 🚧 Draft |
 
 **Categories:** Automation · Detection & Hunting · Incident Response · Vulnerability Management · Reporting · Utilities
 
