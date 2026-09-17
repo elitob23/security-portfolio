@@ -42,14 +42,13 @@ Marlin-Hefted33%
    └────────────── first word
 ```
 
-The script works backwards from the target length:
+The script builds one by trial and error:
 
-1. Picks a target of 15 or 16 characters at random.
-2. Subtracts the 4 fixed characters (one hyphen, two digits, one symbol), leaving the budget for the two words.
-3. Picks a length for the first word, then pulls the second word from the group whose length fills the rest of the budget exactly.
-4. Adds a 2-digit number and a symbol on the end, so the password satisfies complexity rules that require both.
+1. Picks a 2-digit number and a symbol for the end, so the password satisfies complexity rules that require both.
+2. Picks two random words and joins them with a hyphen.
+3. Measures the result. If it isn't 15 or 16 characters, throws both words away and picks two more.
 
-Words are sorted into groups by length when `words.txt` loads, so step 3 is a direct lookup rather than a guess-and-retry loop.
+About a quarter of word pairs land in range, so it usually succeeds within a few tries. Generating 5,000 passwords takes a tenth of a second.
 
 All random choices use Python's `secrets` module, not `random`. `secrets` is backed by the operating system's cryptographic random source; `random` is a predictable pseudo-random generator and is not suitable for anything that protects an account.
 
@@ -81,9 +80,9 @@ Clipboard support per platform:
 | Platform | Clipboard tool | Included with OS? |
 |---|---|---|
 | Windows | `clip` | ✅ Yes, works out of the box |
-| macOS | `pbcopy` | ✅ Yes, works out of the box |
-| Linux (X11) | `xclip` | ❌ `sudo apt install xclip` |
-| Linux (Wayland) | `wl-copy` | ❌ `sudo apt install wl-clipboard` |
+| Linux | `xclip` | ❌ `sudo apt install xclip` |
+
+macOS is not supported. Adding it would mean one more branch in `copy_to_clipboard()` using `pbcopy`.
 
 If no clipboard tool is available, the script still prints the passwords and notes that the copy did not happen. Generation never depends on the clipboard.
 

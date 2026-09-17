@@ -5,11 +5,9 @@
 # No third-party packages are needed. The script only uses the standard library:
 #   os, secrets, subprocess, sys
 #
-# Clipboard support uses the tool the operating system already provides:
+# Clipboard support:
 #   Windows       clip        (built in)
-#   macOS         pbcopy      (built in)
-#   Linux X11     xclip       (sudo apt install xclip)
-#   Linux Wayland wl-copy     (sudo apt install wl-clipboard)
+#   Linux         xclip       (sudo apt install xclip)
 #
 # Without one of these the script still prints the passwords, it just cannot copy them.
 #

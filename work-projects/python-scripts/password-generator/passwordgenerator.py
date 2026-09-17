@@ -20,94 +20,77 @@ import sys
 MIN_LENGTH = 15
 MAX_LENGTH = 16
 
+symbols = "!@#$%&*?"
+
 # words.txt sits next to this script, so build the path from the script location.
 # That way it still works no matter which folder you run the script from.
-SCRIPT_FOLDER = os.path.dirname(os.path.abspath(__file__))
-WORDS_FILE = os.path.join(SCRIPT_FOLDER, "words.txt")
-
-symbols = "!@#$%&*?"
+script_folder = os.path.dirname(os.path.abspath(__file__))
+words_file = os.path.join(script_folder, "words.txt")
 
 
 def load_words():
-    """Read words.txt and sort the words into groups by how long they are."""
-    words_by_length = {}
-    with open(WORDS_FILE, encoding="utf-8") as words_file:
-        for line in words_file:
+    """Read words.txt into a list, one word per line."""
+    words = []
+    with open(words_file, encoding="utf-8") as open_file:
+        for line in open_file:
             word = line.strip()
-            if word.isalpha():
-                # Start a new group the first time we see this length
-                if len(word) not in words_by_length:
-                    words_by_length[len(word)] = []
-                words_by_length[len(word)].append(word)
-    return words_by_length
+            if word:  # skip any blank lines
+                words.append(word)
+    return words
 
 
-def make_password(words_by_length):
+def make_password(words):
     """Build one password of 15 or 16 characters."""
-    # The password looks like Word-Word12!
-    # That is 1 dash + 2 digits + 1 symbol = 4 characters that are not words,
-    # so the two words together need to fill the rest.
-    total_length = secrets.choice([MIN_LENGTH, MAX_LENGTH])
-    words_length = total_length - 4
-
-    # Pick a length for the first word, then the second word gets what is left.
-    # Only keep the options where both lengths actually exist in the word list.
-    first_lengths = []
-    for length in words_by_length:
-        if (words_length - length) in words_by_length:
-            first_lengths.append(length)
-
-    first_length = secrets.choice(first_lengths)
-    second_length = words_length - first_length
-
-    first_word = secrets.choice(words_by_length[first_length])
-    second_word = secrets.choice(words_by_length[second_length])
-
     number = secrets.randbelow(90) + 10  # a 2 digit number, 10 to 99
     symbol = secrets.choice(symbols)
 
-    return first_word + "-" + second_word + str(number) + symbol
+    # Pick two words. If they make the password too long or too short,
+    # throw them away and pick two more.
+    while True:
+        first_word = secrets.choice(words)
+        second_word = secrets.choice(words)
+        password = first_word + "-" + second_word + str(number) + symbol
+
+        if MIN_LENGTH <= len(password) <= MAX_LENGTH:
+            return password
 
 
 def copy_to_clipboard(text):
     """Copy text to the clipboard. Returns True if it worked."""
     if sys.platform == "win32":
-        commands = [["clip"]]
-    elif sys.platform == "darwin":
-        commands = [["pbcopy"]]
+        command = ["clip"]  # built into Windows
     else:
-        commands = [["wl-copy"], ["xclip", "-selection", "clipboard"]]
+        command = ["xclip", "-selection", "clipboard"]  # Linux, needs installing
 
-    for command in commands:
-        try:
-            # clip on Windows expects the text in the system's own encoding
-            subprocess.run(command, input=text.encode(), check=True)
-            return True
-        except (OSError, subprocess.CalledProcessError):
-            # That clipboard tool is missing or failed, so try the next one
-            continue
-    return False
+    try:
+        subprocess.run(command, input=text.encode(), check=True)
+        return True
+    except Exception:
+        # The clipboard tool is missing or did not work
+        return False
 
 
-# Load the words once, before generating anything
-try:
-    words_by_length = load_words()
-except FileNotFoundError:
+# Stop early if the word list is not where we expect it
+if not os.path.exists(words_file):
     print("Could not find words.txt. It needs to sit in the same folder as this script.")
     sys.exit(1)
+
+words = load_words()
 
 # Ask how many passwords to make
 how_many = input("How many passwords do you need? ")
 
 if how_many.isdigit() and int(how_many) > 0:
+    count = int(how_many)
     password = ""
-    for i in range(int(how_many)):
-        password = make_password(words_by_length)
+
+    for i in range(count):
+        password = make_password(words)
         print(password)
 
     # Only the last password can sit in the clipboard, so say which one it is
     if copy_to_clipboard(password):
-        if int(how_many) == 1:
+        if count == 1:
             print("\nCopied to clipboard.")
         else:
             print("\nCopied the last one to the clipboard.")
