@@ -1,0 +1,199 @@
+HOW 24H2.CQL WORKS
+==================
+
+A plain-English walkthrough of the query, top to bottom.
+
+
+------------------------------------------------------------
+THE BIG IDEA
+------------------------------------------------------------
+
+Every version of Windows has a build number. Windows 11 version 24H2 is
+build 26100.
+
+The Falcon sensor reports which OS each computer runs, including the
+build number, in an event called "OsVersionInfo".
+
+So to find every computer on 24H2, the query:
+  1. Takes the OS version events.
+  2. Keeps the ones from Windows with build number 26100.
+  3. Turns them into one row per computer.
+
+
+------------------------------------------------------------
+THE FULL QUERY
+------------------------------------------------------------
+
+    #event_simpleName=OsVersionInfo
+    | event_platform=Win
+    | BuildNumber=26100
+    | groupBy([aid, ComputerName], function=count(as=EventCount))
+
+It's only four lines, and each one does one job.
+
+
+------------------------------------------------------------
+HOW CQL READS A QUERY
+------------------------------------------------------------
+
+CQL works like a conveyor belt. Events come in at the top, and each line
+does one job to them before passing them down:
+
+  pick events  ->  filter  ->  filter  ->  count
+
+The | (pipe) character at the start of a line passes the results of the
+line above into this one.
+
+
+------------------------------------------------------------
+PART 1: PICKING THE EVENTS
+------------------------------------------------------------
+
+    #event_simpleName=OsVersionInfo
+
+  event_simpleName is the type of event, like a category. Falcon records
+  many types: process starts, DNS requests, network connections, and
+  more. This line keeps only "OsVersionInfo" events.
+
+  An OsVersionInfo event is the sensor saying "here's the operating
+  system I'm running on." It's sent from time to time, for example when
+  the sensor starts up. It isn't sent constantly.
+
+  The # means event_simpleName is a "tag" field. Tags are indexed, so
+  filtering on them is very fast. Putting the tag filter first shrinks
+  the data as early as possible, which makes every later step faster.
+
+
+------------------------------------------------------------
+PART 2: WINDOWS ONLY
+------------------------------------------------------------
+
+    | event_platform=Win
+
+  Falcon runs on Windows, macOS and Linux. event_platform says which one
+  an event came from. This line throws away anything that isn't Windows.
+
+  Note: there's no # here, because event_platform is a normal field and
+  not a tag.
+
+  This line could also be written on the first line with a space instead
+  of a pipe:
+
+    #event_simpleName=OsVersionInfo event_platform=Win
+
+  A space between two filters means AND, so the result is the same.
+
+
+------------------------------------------------------------
+PART 3: THE BUILD NUMBER
+------------------------------------------------------------
+
+    | BuildNumber=26100
+
+  BuildNumber is the Windows build the computer is running. This keeps
+  only build 26100, which is Windows 11 24H2.
+
+  This is an exact match. 26100 matches, but 26200 (25H2) and 22631
+  (23H2) don't.
+
+  WHAT A BUILD NUMBER DOES AND DOESN'T TELL YOU:
+
+    Windows version:   10.0.26100.4061
+                            ^^^^^ ^^^^
+                            |     |
+                            |     patch level (changes every month)
+                            build number (changes with each release)
+
+  Monthly updates only change the number after the build, so every 24H2
+  computer has BuildNumber 26100, patched or not. This query can tell you
+  WHICH RELEASE a computer is on, but not how up to date it is.
+
+  WATCH OUT: Windows Server 2025 is also build 26100. Servers running it
+  will show up in the results too.
+
+
+------------------------------------------------------------
+PART 4: ONE ROW PER COMPUTER
+------------------------------------------------------------
+
+    | groupBy([aid, ComputerName], function=count(as=EventCount))
+
+  THE PROBLEM: A computer sends OsVersionInfo every time the sensor
+  starts, so one laptop that rebooted 12 times this week has 12 events.
+  You want one row for that laptop, not 12.
+
+  THE ANALOGY: A pivot table in Excel. The fields in [ ] are the rows.
+  The function is what gets calculated for each row.
+
+  [aid, ComputerName]
+      Make one row for each unique combination of:
+        aid            Falcon's unique ID for the computer (agent ID)
+        ComputerName   the computer's hostname
+
+      aid is included because hostnames aren't always unique. Two
+      computers could share a name, or a computer could be renamed. The
+      aid stays the same for the life of the sensor install.
+
+  function=count(as=EventCount)
+      For each computer, count how many events were squashed into its row,
+      and put that number in a new field called EventCount.
+
+      as=EventCount just names the result. Without it, the field would
+      be called "_count".
+
+  EventCount is how many times the computer reported its OS version.
+  A high number usually just means it rebooted or reconnected a lot. It
+  doesn't mean anything bad.
+
+
+------------------------------------------------------------
+WHY THE TIME RANGE MATTERS
+------------------------------------------------------------
+
+The query doesn't set a time range. You pick it in the search screen.
+
+Since OsVersionInfo is only sent now and then, a computer that has been
+running for two weeks without a reboot might not have sent one in the
+last 24 hours. Search the last 24 hours and that computer is missing
+from the results.
+
+Use a longer window (7 to 30 days) to catch those machines.
+
+The trade-off: a longer window also catches computers that upgraded
+partway through it, or moved on to a newer build after reporting 26100.
+They still show up, because their older 26100 events are in the range.
+
+
+------------------------------------------------------------
+THE WHOLE FLOW IN ONE PICTURE
+------------------------------------------------------------
+
+  All Falcon events
+      |
+      v
+  Keep OsVersionInfo events                (Part 1)
+      |
+      v
+  Keep Windows only                        (Part 2)
+      |
+      v
+  Keep BuildNumber 26100                   (Part 3)
+      |                                    e.g. 40 events from 3 laptops
+      v
+  One row per computer, with a count       (Part 4)
+                                           LAPTOP-01  12
+                                           LAPTOP-02   3
+                                           LAPTOP-03  25
+
+
+------------------------------------------------------------
+CQL CONCEPTS USED (quick reference)
+------------------------------------------------------------
+
+  |                   Pass results to the next step
+  #field=value        Filter on a tag field (fast)
+  field=value         Filter on a normal field (exact match)
+  space between       Two filters on one line means AND
+  groupBy()           Squash rows into one per unique combination
+  count()             Count events in each group
+  as=                 Name the field a function creates

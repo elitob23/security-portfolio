@@ -1,0 +1,352 @@
+HOW AIUSAGE.CQL WORKS
+=====================
+
+A plain-English walkthrough of the query, top to bottom.
+
+
+------------------------------------------------------------
+THE BIG IDEA
+------------------------------------------------------------
+
+Before a computer can talk to a website, it has to look up that website's
+IP address. This lookup is called a DNS request. The Falcon sensor records
+every DNS request as a "DnsRequest" event.
+
+So if a laptop looks up "chatgpt.com", someone (or something) on that
+laptop is probably about to use ChatGPT.
+
+The query does three things:
+  1. Finds DNS requests for AI websites.
+  2. Works out WHICH PROGRAM made each request, and WHICH USER ran it.
+  3. Counts them up per computer, per user, per AI service.
+
+
+------------------------------------------------------------
+HOW CQL READS A QUERY
+------------------------------------------------------------
+
+CQL works like a conveyor belt. Events come in at the top, and each line
+does one job to them before passing them down:
+
+  filter  ->  label  ->  add details  ->  count  ->  sort
+
+The | (pipe) character separates each step. The output of one step is the
+input to the next.
+
+Lines starting with // are comments. CQL ignores them. They're notes for
+people reading the query.
+
+
+------------------------------------------------------------
+PART 1: PICKING THE EVENTS
+------------------------------------------------------------
+
+    #event_simpleName=DnsRequest event_platform=Win
+
+  #event_simpleName=DnsRequest
+      Only keep DNS request events. The # means event_simpleName is a
+      "tag" field. Tags are indexed, so filtering on them first is the
+      fastest way to shrink the data before doing anything else.
+
+  event_platform=Win
+      Only keep events from Windows computers.
+
+  Two filters on the same line with a space between them means AND:
+  both must be true.
+
+
+------------------------------------------------------------
+PART 2: KEEPING ONLY AI DOMAINS
+------------------------------------------------------------
+
+    | DomainName=/openai\.com|chatgpt\.com|...|chat\.deepseek\.com/i
+
+  DomainName is the website being looked up.
+
+  /.../ means "this is a regular expression" (a text pattern), not an
+  exact value.
+
+  Inside the pattern:
+    |     means OR. Match any one of these.
+    \.    means a real dot. In a regex, a plain . means "any character",
+          so the backslash is needed to match an actual dot.
+
+  The i at the end means case-insensitive, so "ChatGPT.com" matches too.
+
+  The pattern only has to appear somewhere in the domain. That's why
+  "api.openai.com" matches "openai\.com". It also means a domain like
+  "notopenai.com" would match. See the README for how to tighten this.
+
+
+------------------------------------------------------------
+PART 3: LABELING THE SERVICE
+------------------------------------------------------------
+
+    | case {
+        DomainName=/openai\.com|chatgpt\.com/i | AIService:="ChatGPT/OpenAI";
+        DomainName=/gemini|bard|generativelanguage\.googleapis/i | AIService:="Google Gemini";
+        DomainName=/claude\.ai|anthropic\.com/i | AIService:="Claude/Anthropic";
+        DomainName=/deepseek\.com/i | AIService:="DeepSeek";
+        * | AIService:="Other AI Service";
+      }
+
+  A "case" block is like an if / else-if / else chain. CQL checks each
+  line from top to bottom and uses the FIRST one that matches. Each line
+  ends with a semicolon.
+
+  Each line has two halves split by a pipe:
+    left side   the test          DomainName=/openai.../i
+    right side  what to do        AIService:="ChatGPT/OpenAI"
+
+  :=  creates (or overwrites) a field. Here it makes a new field called
+      AIService holding a friendly name.
+
+  *   matches anything. It's the "else" at the end, a safety net in case a
+      domain got through Part 2 but doesn't fit any label.
+
+  The Gemini pattern is short ("gemini", "bard") because Part 2 already
+  removed everything that isn't an AI domain.
+
+
+------------------------------------------------------------
+PART 4: WHICH PROGRAM MADE THE REQUEST? (first join)
+------------------------------------------------------------
+
+    | join({#event_simpleName=ProcessRollup2 event_platform=Win
+            | rename(field=TargetProcessId, as=ContextProcessId)},
+           field=ContextProcessId, key=ContextProcessId,
+           include=[UserSid, CommandLine, ImageFileName], mode=left)
+
+  THE PROBLEM: A DnsRequest event says which process made the lookup (as
+  a process ID), but not much else. It doesn't include the user.
+
+  THE FIX: Every time a program starts, Falcon records a "ProcessRollup2"
+  event. That event has the process ID, the full program path, the
+  command line, and the SID of the user who ran it.
+
+  A "join" matches events from two searches on a shared value, like
+  matching two spreadsheets on an ID column.
+
+  THE ANALOGY: You have a list of phone calls with only a badge number,
+  and a separate staff list with badge numbers and names. You line them
+  up by badge number to put a name next to each call.
+
+  { ... }
+      The part in curly braces is a second, smaller search (a
+      "subquery"). It finds Windows process-start events.
+
+  rename(field=TargetProcessId, as=ContextProcessId)
+      The ID has different names in the two events:
+        DnsRequest      calls it  ContextProcessId  (the process that
+                                                     made the request)
+        ProcessRollup2  calls it  TargetProcessId   (the process that
+                                                     started)
+      Renaming makes the names match, so they're easy to line up.
+
+  field=ContextProcessId
+      The field to match on in the MAIN events (the DNS requests).
+
+  key=ContextProcessId
+      The field to match on in the SUBQUERY events (the process starts).
+
+  include=[UserSid, CommandLine, ImageFileName]
+      Which fields to copy from the process event onto the DNS event:
+        UserSid        ID of the user account that ran the program
+        CommandLine    the full command used to start it
+        ImageFileName  the full path to the program file
+
+  mode=left
+      Keep every DNS request, even if no matching process is found. The
+      new fields are just left empty. Without this, unmatched DNS requests
+      would be thrown away.
+
+  Note: CommandLine is copied here but never shown in the final output
+  (see Part 7). You could add it to the collect() list if you want it.
+
+
+------------------------------------------------------------
+PART 5: WHAT IS THE USER'S NAME? (second join)
+------------------------------------------------------------
+
+    | join({#event_simpleName=UserIdentity
+            | rename(field=UserName, as=ResolvedUserName)},
+           field=UserSid, key=UserSid,
+           include=[ResolvedUserName, LogonDomain], mode=left)
+
+  A SID is a long ID like S-1-5-21-1234567890-...-1001. It uniquely
+  identifies a user, but it isn't readable.
+
+  When a user logs in, Falcon records a "UserIdentity" event with both
+  the SID and the readable username. This join uses the same pattern as
+  Part 4 to swap the SID for a name.
+
+  rename(field=UserName, as=ResolvedUserName)
+      Gives the username a clear new name, so it's obvious this value
+      came from the lookup.
+
+  field=UserSid, key=UserSid
+      The field has the same name on both sides this time, so no rename
+      is needed to match.
+
+  include=[ResolvedUserName, LogonDomain]
+      Copies the username and the domain the user logged in to.
+
+  mode=left
+      Same as before. Keep the DNS request even if no user is found.
+
+  WHY TWO JOINS: There's no direct link from a DNS request to a username.
+  The chain is:
+
+      DnsRequest --(process ID)--> ProcessRollup2 --(SID)--> UserIdentity
+
+  Each join follows one link.
+
+  A LIMIT TO KNOW ABOUT: join() subqueries can only hold a limited number
+  of rows. Over a big environment or a long time range, some processes or
+  users may not make it in, and those rows end up with empty fields.
+
+
+------------------------------------------------------------
+PART 6: CHOOSING WHAT TO SHOW AS THE USER
+------------------------------------------------------------
+
+    | case {
+        ResolvedUserName=* | FinalUserName:=ResolvedUserName;
+        ContextBaseFileName=* | FinalUserName:=format("Process: %s", field=[ContextBaseFileName]);
+        * | FinalUserName:="Unknown";
+      }
+
+  Not every event will have a username after the joins. This case block
+  picks the best thing available, in order:
+
+    1. ResolvedUserName=*
+         =* means "this field exists and has a value". If the username
+         was found, use it.
+
+    2. ContextBaseFileName=*
+         No username, but the DNS event knows the program name (for
+         example chrome.exe). Show "Process: chrome.exe" instead.
+
+         format("Process: %s", field=[ContextBaseFileName]) builds text.
+         %s is a placeholder that gets replaced by the field's value.
+
+    3. *
+         Nothing to go on. Show "Unknown".
+
+
+------------------------------------------------------------
+PART 7: FORMATTING THE TIME
+------------------------------------------------------------
+
+    | formatTime(field=@timestamp, format="%Y-%m-%d %H:%M:%S", as=Timestamp)
+
+  @timestamp is stored as a raw number (milliseconds since 1970). This
+  turns it into readable text like 2026-09-17 14:05:32 and saves it in a
+  new field called Timestamp.
+
+    %Y year   %m month   %d day   %H hour   %M minute   %S second
+
+  Note: the groupBy() in the next part only keeps the fields it groups
+  by and the ones it calculates, so Timestamp doesn't appear in the final
+  results. To see when activity happened, add something like
+  max(@timestamp, as=LastSeen) to the groupBy function list.
+
+
+------------------------------------------------------------
+PART 8: COUNTING IT UP
+------------------------------------------------------------
+
+    | groupBy([aid, ComputerName, FinalUserName, LogonDomain, AIService],
+              function=[count(as=RequestCount),
+                        collect([DomainName, ContextBaseFileName, ImageFileName], limit=10)])
+
+  So far there's one row per DNS request, which could be thousands.
+  groupBy() squashes them into one row per unique combination.
+
+  THE ANALOGY: A pivot table in Excel. The fields in the first [ ] are the
+  rows. The functions are what gets calculated for each row.
+
+  Grouped by:
+    aid            Falcon's unique ID for the computer
+    ComputerName   the computer's hostname
+    FinalUserName  the user (from Part 6)
+    LogonDomain    the user's domain
+    AIService      the label (from Part 3)
+
+  So "alice on LAPTOP-01 using ChatGPT" is one row, and "alice on
+  LAPTOP-01 using Claude" is a separate row.
+
+  function=[ ... ]
+      What to calculate for each group:
+
+      count(as=RequestCount)
+          How many DNS requests landed in this group.
+
+      collect([DomainName, ContextBaseFileName, ImageFileName], limit=10)
+          Gathers the distinct values of each field into a list, up to
+          10 each. This shows which domains were hit and which programs
+          made the requests, without one row per request.
+
+
+------------------------------------------------------------
+PART 9: SORTING
+------------------------------------------------------------
+
+    | sort(RequestCount, order=desc, limit=1000)
+
+  order=desc   biggest number first, so the heaviest users are at the top
+  limit=1000   return at most 1,000 rows
+
+
+------------------------------------------------------------
+THE WHOLE FLOW IN ONE PICTURE
+------------------------------------------------------------
+
+  All Falcon events
+      |
+      v
+  Keep Windows DnsRequest events          (Part 1)
+      |
+      v
+  Keep only AI domains                    (Part 2)
+      |                                   e.g. chatgpt.com
+      v
+  Add AIService label                     (Part 3)
+      |                                   "ChatGPT/OpenAI"
+      v
+  Join ProcessRollup2 on process ID       (Part 4)
+      |                                   + UserSid, ImageFileName
+      v
+  Join UserIdentity on UserSid            (Part 5)
+      |                                   + ResolvedUserName, LogonDomain
+      v
+  Pick FinalUserName                      (Part 6)
+      |                                   "alice" / "Process: chrome.exe" / "Unknown"
+      v
+  Group by computer + user + service      (Part 8)
+      |                                   count requests, collect domains and programs
+      v
+  Sort by count, top 1,000                (Part 9)
+
+
+------------------------------------------------------------
+CQL CONCEPTS USED (quick reference)
+------------------------------------------------------------
+
+  // comment          A note CQL ignores
+  |                   Pass results to the next step
+  #field=value        Filter on a tag field (fast)
+  field=value         Filter on a normal field
+  field=*             The field exists and has a value
+  /pattern/i          Regular expression, case-insensitive
+  :=                  Create or overwrite a field
+  case { ... }        If / else-if / else, first match wins
+  rename()            Give a field a new name
+  join()              Match events from a subquery on a shared value
+  mode=left           Keep events even when the join finds no match
+  format()            Build text from fields
+  formatTime()        Turn a timestamp into readable text
+  groupBy()           Squash rows into one per unique combination
+  count()             Count events in each group
+  collect()           List the distinct values of a field in each group
+  sort()              Order the results
