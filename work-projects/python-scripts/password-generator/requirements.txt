@@ -1,0 +1,17 @@
+# Requirements for passwordgenerator.py
+#
+# Python 3.10+ is required.
+#
+# No third-party packages are needed. The script only uses the standard library:
+#   os, secrets, subprocess, sys
+#
+# Clipboard support uses the tool the operating system already provides:
+#   Windows       clip        (built in)
+#   macOS         pbcopy      (built in)
+#   Linux X11     xclip       (sudo apt install xclip)
+#   Linux Wayland wl-copy     (sudo apt install wl-clipboard)
+#
+# Without one of these the script still prints the passwords, it just cannot copy them.
+#
+# Install with (no-op, kept for consistency):
+#   pip install -r requirements.txt
