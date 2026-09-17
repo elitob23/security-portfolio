@@ -29,6 +29,7 @@ This folder exists to:
 | Script | Summary | Category | Status |
 |---|---|---|---|
 | [portscanner.py](port-scanner/portscanner.py) | Multithreaded TCP port scanner that lists open ports and their common service names. Standard library only. See [howitworks.txt](port-scanner/howitworks.txt) for a line-by-line walkthrough | Utilities | 🚧 Draft |
+| [passwordgenerator.py](password-generator/passwordgenerator.py) | Builds readable 15-16 character passwords for new user accounts and copies the result to the clipboard. Standard library only. See the [README](password-generator/README.md) for the format and strength notes | Automation | 🚧 Draft |
 
 **Categories:** Automation · Detection & Hunting · Incident Response · Vulnerability Management · Reporting · Utilities
 
