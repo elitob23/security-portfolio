@@ -10,7 +10,7 @@ Status:       Draft
 
 # Strings two words together so the password is easy to read out and type.
 # Every password is 15 or 16 characters and is copied to the clipboard.
-# Example output: Glacier-Tunnel48%
+# Example output: Glacier~Tunnel48%  or  48%Glacier~Tunnel
 
 import os
 import secrets  # secrets is safer than random for passwords
@@ -21,6 +21,10 @@ MIN_LENGTH = 15
 MAX_LENGTH = 16
 
 symbols = "!@#$%&*?"
+
+# The character that goes between the two words. One of these is picked
+# at random each time so every password does not look the same.
+separators = "-._~/+="
 
 # words.txt sits next to this script, so build the path from the script location.
 # That way it still works no matter which folder you run the script from.
@@ -43,13 +47,25 @@ def make_password(words):
     """Build one password of 15 or 16 characters."""
     number = secrets.randbelow(90) + 10  # a 2 digit number, 10 to 99
     symbol = secrets.choice(symbols)
+    separator = secrets.choice(separators)
+
+    # The number and symbol travel together as one block, for example "62$"
+    extras = str(number) + symbol
+
+    # That block goes on the front or the back, decided at random
+    extras_go_first = secrets.choice([True, False])
 
     # Pick two words. If they make the password too long or too short,
     # throw them away and pick two more.
     while True:
         first_word = secrets.choice(words)
         second_word = secrets.choice(words)
-        password = first_word + "-" + second_word + str(number) + symbol
+        middle = first_word + separator + second_word
+
+        if extras_go_first:
+            password = extras + middle
+        else:
+            password = middle + extras
 
         if MIN_LENGTH <= len(password) <= MAX_LENGTH:
             return password

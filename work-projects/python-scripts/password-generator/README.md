@@ -35,17 +35,23 @@ This script exists to:
 Every password follows the same shape:
 
 ```
-Marlin-Hefted33%
-└──┬─┘ └──┬──┘└┬┘
-   │      │    └── 2-digit number + symbol
-   │      └─────── second word
-   └────────────── first word
+Marlin~Hefted33%          35*Lilies=Groovy
+└──┬─┘│└──┬──┘└┬┘         └┬┘ └──┬─┘│└──┬─┘
+   │  │   │    └── block   │     │  │   └── second word
+   │  │   └── second word  │     │  └── separator
+   │  └── separator        │     └── first word
+   └── first word          └── block
 ```
+
+Two parts move from password to password:
+
+- **The separator** between the words is picked at random from `- . _ ~ / + =`
+- **The block** of 2-digit number and symbol goes on the front or the back, decided by a coin flip
 
 The script builds one by trial and error:
 
-1. Picks a 2-digit number and a symbol for the end, so the password satisfies complexity rules that require both.
-2. Picks two random words and joins them with a hyphen.
+1. Picks a 2-digit number and a symbol, so the password satisfies complexity rules that require both, then decides whether that block goes on the front or the back.
+2. Picks a separator, then picks two random words and joins them with it.
 3. Measures the result. If it isn't 15 or 16 characters, throws both words away and picks two more.
 
 About a quarter of word pairs land in range, so it usually succeeds within a few tries. Generating 5,000 passwords takes a tenth of a second.
@@ -60,9 +66,9 @@ python passwordgenerator.py
 
 ```
 How many passwords do you need? 3
-Gunmen-Fixer96#
-Rafters-Stony51?
-Marlin-Hefted33%
+Names=Sneaked22%
+35*Lilies=Groovy
+Foam.Confines51@
 
 Copied the last one to the clipboard.
 ```
@@ -95,13 +101,15 @@ If no clipboard tool is available, the script still prints the passwords and not
 | [requirements.txt](requirements.txt) | Dependency notes (no packages required) |
 | [banner.svg](banner.svg) | README banner |
 
-`words.txt` has to stay in the same folder as the script. To change the vocabulary, edit the file: one word per line, letters only. The script regroups by length on the next run, and any word length that cannot be paired to hit 15-16 characters is simply never selected.
+`words.txt` has to stay in the same folder as the script. To change the vocabulary, edit the file: one word per line, letters only. Word pairs that cannot hit 15-16 characters are discarded and retried, so mixing in words of any length is fine. Keep some in the 4-8 letter range though: if no pair in the file can reach 15-16 characters, the retry loop has nothing to find and will spin.
 
 ## Password Strength
 
-These passwords carry roughly **35 bits of entropy**. Read that as: no realistic chance of being guessed against a login prompt that rate-limits or locks out, but not built to survive offline cracking if a password hash is stolen.
+These passwords carry roughly **39 bits of entropy**. Read that as: no realistic chance of being guessed against a login prompt that rate-limits or locks out, but not built to survive offline cracking if a password hash is stolen.
 
-That is a deliberate trade. Readability at 15-16 characters costs entropy — a 4-word version of this script reached ~61 bits, but produced passwords around 30 characters. For temporary credentials that users replace at first login, 35 bits is the right side of the trade.
+That is a deliberate trade. Readability at 15-16 characters costs entropy — a 4-word version of this script reached ~61 bits, but produced passwords around 30 characters. For temporary credentials that users replace at first login, 39 bits is the right side of the trade.
+
+The random separator and the front-or-back placement add about 4 bits between them. Worth having, but they are a small contribution next to the word choice — their real value is that passwords handed out on the same day do not look like they came off a production line.
 
 **Use these for first-login passwords that get changed.** For credentials that persist, especially service accounts, generate longer random strings and store them in a password manager.
 
