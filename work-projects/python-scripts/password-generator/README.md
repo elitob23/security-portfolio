@@ -1,6 +1,6 @@
 <img src="banner.svg" alt="password-generator" width="100%" />
 
-# password generator
+# password-generator
 
 A small Python script that builds readable 15-16 character passwords for new user accounts, then copies the result to the clipboard. Two dictionary words, a number, and a symbol: strong enough to hand out, short enough to fit password field limits, and easy to read aloud over the phone.
 
