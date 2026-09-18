@@ -30,6 +30,7 @@ This folder exists to:
 |---|---|---|---|
 | [portscanner.py](port-scanner/portscanner.py) | Multithreaded TCP port scanner that lists open ports and their common service names. Standard library only. See [howitworks.txt](port-scanner/howitworks.txt) for a line-by-line walkthrough | Utilities | 🚧 Draft |
 | [passwordgenerator.py](password-generator/passwordgenerator.py) | Builds readable 15-16 character passwords for new user accounts and copies the result to the clipboard. Standard library only. See the [README](password-generator/README.md) for the format and strength notes | Automation | 🚧 Draft |
+| [ipautoscan.py](ip-auto-scan/ipautoscan.py) | Desktop lookup window that checks a typed IP address against the AbuseIPDB API and reports its abuse score, report count and owning network. Needs `requests` and an API key. See the [README](ip-auto-scan/README.md) for setup and [howitworks.txt](ip-auto-scan/howitworks.txt) for a line-by-line walkthrough | Incident Response | 🚧 Draft |
 
 **Categories:** Automation · Detection & Hunting · Incident Response · Vulnerability Management · Reporting · Utilities
 
@@ -81,7 +82,7 @@ cd security-portfolio/work-projects/python-scripts
 python3 -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 
-# Install dependencies (once requirements.txt exists)
+# Install dependencies
 pip install -r requirements.txt
 
 # Show a script's options

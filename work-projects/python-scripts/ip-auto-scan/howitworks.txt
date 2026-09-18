@@ -1,0 +1,560 @@
+HOW IPAUTOSCAN.PY WORKS
+=======================
+
+A plain-English walkthrough of the script, top to bottom.
+
+
+------------------------------------------------------------
+THE BIG IDEA
+------------------------------------------------------------
+
+AbuseIPDB is a public database of IP addresses that people have reported
+for attacking things: brute force attempts, port scans, spam, and so on.
+Anyone can look up an address and see how many reports it has.
+
+They offer an "API", which is a way for a program to ask the same question
+the website answers, and get back plain data instead of a web page.
+
+This script puts a small window on screen. You type an IP address, it asks
+AbuseIPDB about that address, and it prints the answer in the window.
+
+The point is speed. During triage you check the same thing over and over,
+and a window that is already open beats loading a website every time.
+
+
+------------------------------------------------------------
+HOW TO RUN IT
+------------------------------------------------------------
+
+First, put your API key in an environment variable (see README.md), then:
+
+  python ipautoscan.py
+
+Type an address, press Enter. That's the whole tool.
+
+
+------------------------------------------------------------
+A NOTE ON THE OLD VERSION
+------------------------------------------------------------
+
+This script used to read the clipboard automatically: copy an IP anywhere
+on the machine and it would scan it. That was convenient and a bad idea.
+
+The clipboard holds whatever you copied last. During a shift that includes
+passwords, internal hostnames, and pieces of tickets. A script that scans
+the clipboard sends all of it to a company on the internet.
+
+Typing the address in is one extra second, and nothing leaves the machine
+that you did not deliberately type. This is a normal security trade: the
+convenient version and the safe version are rarely the same version.
+
+
+------------------------------------------------------------
+PART 1: THE DOCSTRING (the text in triple quotes at the top)
+------------------------------------------------------------
+
+A string in triple quotes at the very top of a file is called a
+"docstring". Python doesn't run it. It's a description for people reading
+the file: what the script does, what it needs, and how to run it.
+
+
+------------------------------------------------------------
+PART 2: IMPORTS
+------------------------------------------------------------
+
+    import ipaddress
+    import json
+    import os
+    import requests
+    import tkinter as tk
+    from threading import Thread
+    from tkinter import scrolledtext
+
+"import" loads code so you can use it. All of these come with Python
+except "requests", which is why requirements.txt exists.
+
+  ipaddress     Checks whether some text is a real IP address.
+  json          Turns data into readable text and back again.
+  os            Used here to read an environment variable.
+  requests      Makes the web request to AbuseIPDB. Third-party.
+  tkinter       Builds windows, buttons and text boxes.
+  Thread        Runs the lookup in the background so the window
+                doesn't freeze while it waits.
+  scrolledtext  A text box with a scrollbar already attached.
+
+Two import styles appear here:
+
+  import tkinter as tk
+      Loads the whole module under a shorter name. Everything from it is
+      written tk.Something. The "as tk" is just to save typing.
+
+  from threading import Thread
+      Takes one thing out of a module so you can use its name directly.
+      Without the "from", you would write threading.Thread every time.
+
+
+------------------------------------------------------------
+PART 3: THE API KEY
+------------------------------------------------------------
+
+    API_KEY = os.environ.get('ABUSEIPDB_API_KEY', 'your_API_here')
+
+An API key is a password that identifies you to AbuseIPDB. It belongs to
+your account, and their rate limits are counted against it.
+
+"Environment variables" are settings that live in your operating system
+rather than in any file. os.environ.get() reads one.
+
+  The first value is the name of the variable to look for.
+  The second is what to use if it isn't set. This is called a default.
+
+So: use the key from the environment, and if there isn't one, fall back to
+the placeholder text. The placeholder doesn't work, and lookups come back
+with a 401 error, which is the point. It fails obviously.
+
+WHY NOT JUST PUT THE KEY IN THE FILE: this file goes on GitHub. Keys
+committed to a repository get found and used by other people, usually
+within minutes. Keeping the key outside the file means the file is safe
+to publish and the key stays on your machine.
+
+
+------------------------------------------------------------
+PART 4: scan_ip() - asking AbuseIPDB
+------------------------------------------------------------
+
+    def scan_ip(ip):
+        url = 'https://api.abuseipdb.com/api/v2/check'
+        headers = {
+            "Key": API_KEY,
+            "Accept": "application/json"
+        }
+        params = {
+            "ipAddress": ip,
+            "maxAgeInDays": 90
+        }
+        response = requests.get(url, headers=headers, params=params, timeout=15)
+        return response.json()
+
+  def scan_ip(ip):
+      "def" creates a function: a named block of code you can run later.
+      "ip" is a parameter, a placeholder for whatever gets handed in.
+
+  The curly braces { } make a "dictionary": a collection of labelled
+  values. "Key": API_KEY means the label "Key" holds the API key. You look
+  things up by label rather than by position.
+
+  headers
+      Extra information attached to a web request, separate from the
+      request itself. Think of the address on an envelope versus the
+      letter inside.
+        Key     Your API key. This is how they know who is asking.
+        Accept  "Send the answer back as JSON, not as a web page."
+
+  params
+      The actual question, tacked onto the end of the URL.
+        ipAddress     The address to look up.
+        maxAgeInDays  Only count reports from the last 90 days. Without
+                      this you get an address's entire history, which
+                      makes long-retired problems look current.
+
+  requests.get(...)
+      Sends the request and waits for the answer. "get" is the kind of
+      request that asks for information without changing anything.
+
+  timeout=15
+      Give up after 15 seconds. Without a timeout, a server that accepts
+      your connection and then says nothing leaves the script waiting
+      forever with no way to recover.
+
+  return response.json()
+      The answer arrives as text. .json() turns that text into a Python
+      dictionary you can pull values out of. "return" hands it back to
+      whoever called the function.
+
+  WHAT COMES BACK looks roughly like this:
+
+    {
+      "data": {
+        "ipAddress": "198.51.100.42",
+        "abuseConfidenceScore": 100,
+        "totalReports": 2847,
+        "countryCode": "NL",
+        "isp": "Example Hosting BV",
+        "isWhitelisted": false,
+        "lastReportedAt": "2026-09-17T22:14:05+00:00"
+      }
+    }
+
+  There are more fields than this. The script ignores the rest.
+
+
+------------------------------------------------------------
+PART 5: update_text() - writing into the window
+------------------------------------------------------------
+
+    def update_text(text_widget, text):
+        text_widget.config(state=tk.NORMAL)
+        text_widget.insert(tk.END, text + '\n')
+        text_widget.config(state=tk.DISABLED)
+        # Auto scroll to the end
+        text_widget.see(tk.END)
+
+  A "widget" is any single piece of a window: a button, a text box, a
+  label. text_widget is the black box where results appear.
+
+  The box is kept read-only so you can't type over your own results. But
+  read-only blocks the script too, so each write is a three-step dance:
+
+    state=tk.NORMAL     unlock the box
+    insert(...)         add the text, with a newline on the end
+    state=tk.DISABLED   lock it again
+
+  see(tk.END)
+      Scroll down to the bottom, so the newest result is visible without
+      dragging the scrollbar.
+
+  tk.END is tkinter's word for "the end of the text". Not a number, so it
+  keeps meaning the end however much text is already in the box.
+
+
+------------------------------------------------------------
+PART 6: post() - writing from a background thread
+------------------------------------------------------------
+
+    def post(text_widget, text):
+        text_widget.after(0, update_text, text_widget, text)
+
+  This is the only tricky part of the script, and it needs Part 8 to make
+  full sense. The short version:
+
+  Tkinter windows may only be touched by the "main thread", the one that
+  started the program. The lookup runs on a different thread, so it is not
+  allowed to write into the box itself.
+
+  .after(0, function, arg1, arg2)
+      Means "main thread, please run this function for me, as soon as you
+      can". The 0 is a delay in milliseconds, so 0 means immediately.
+
+      Note that update_text has no brackets after it. You are handing over
+      the function itself for tkinter to call later, not calling it now.
+      Adding brackets would call it on the wrong thread, which is the
+      exact thing this is avoiding.
+
+  Doing this wrong usually seems to work, then crashes occasionally and
+  unpredictably. Threading bugs tend to look like bad luck.
+
+
+------------------------------------------------------------
+PART 7: run_scan() - the lookup, with the error handling
+------------------------------------------------------------
+
+    def run_scan(text_widget, ip, on_done):
+        try:
+            result = scan_ip(ip)
+            errors = result.get("errors")
+            if errors:
+                for error in errors:
+                    post(text_widget, f"Error {error.get('status', '')}: {error.get('detail', error)}")
+            else:
+                data = result.get("data", {})
+                filtered_result = {
+                    "IP": data.get("ipAddress"),
+                    ... and six more fields
+                }
+                post(text_widget, json.dumps(filtered_result, indent=4))
+        except Exception as e:
+            post(text_widget, f"Error: {e}")
+        finally:
+            text_widget.after(0, on_done)
+
+  try / except / finally means:
+      try      Attempt this.
+      except   If it goes wrong, do this instead of crashing.
+      finally  Run this either way, success or failure.
+
+  Exception is the general category of "something went wrong". Catching it
+  here covers the network being down, the request timing out, and anything
+  else unexpected. "as e" gives the error a name so it can be printed.
+
+  THE ERRORS CHECK, and why it matters:
+
+    errors = result.get("errors")
+
+  When something is wrong with the request itself - a bad API key, an
+  address the API won't accept, your daily quota used up - AbuseIPDB does
+  not fail the request. It returns a normal response with an "errors" list
+  inside it:
+
+    {"errors": [{"detail": "Authentication failed.", "status": 401}]}
+
+  Notice there is no "data" in that response. If the script skipped this
+  check and went straight to reading data, it would find nothing and print
+  every field as empty:
+
+    {"IP": null, "Abuse Confidence Score": null, ...}
+
+  On a quick glance that reads like a clean IP. A tool that silently says
+  "looks fine" when it has actually failed is worse than one that crashes,
+  because you believe it. So the errors get checked for first and printed.
+
+  .get("errors") vs ["errors"]
+      Square brackets crash if the label isn't there. .get() returns
+      nothing (None) instead, which is what you want when the label is
+      only sometimes present. .get("data", {}) goes further: if "data"
+      is missing, hand back an empty dictionary so the next line has
+      something to work with.
+
+  if errors:
+      In Python, an empty list counts as false and a list with anything
+      in it counts as true. So this reads as "if there were any errors".
+
+  for error in errors:
+      A "for" loop repeats for each item in a list. There is usually one
+      error, but the API returns a list, so the script handles several.
+
+  json.dumps(filtered_result, indent=4)
+      The opposite of .json(). Turns the dictionary back into text so it
+      can be displayed. indent=4 spreads it over multiple lines with
+      indentation, instead of one long unreadable line.
+
+  finally: text_widget.after(0, on_done)
+      on_done re-enables the Scan button. Putting it in "finally"
+      guarantees it runs even if the lookup failed. Without that, one
+      failed request would leave the button disabled forever and the tool
+      would look frozen.
+
+
+------------------------------------------------------------
+PART 8: submit() - validation, and starting the thread
+------------------------------------------------------------
+
+    def submit(entry, button, text_widget):
+        ip = entry.get().strip()
+        if not ip:
+            return
+        try:
+            ipaddress.ip_address(ip)
+        except ValueError:
+            update_text(text_widget, f"Error: '{ip}' is not a valid IPv4 or IPv6 address.")
+            return
+
+        button.config(state=tk.DISABLED)
+        update_text(text_widget, f"> scanning {ip} ...")
+        entry.delete(0, tk.END)
+
+        def on_done():
+            button.config(state=tk.NORMAL)
+            entry.focus_set()
+
+        Thread(target=run_scan, args=(text_widget, ip, on_done), daemon=True).start()
+
+  This runs when you press Enter or click Scan. It is the most important
+  function in the file, because it decides what is allowed out.
+
+  entry.get().strip()
+      .get() reads what you typed. .strip() removes spaces from both ends,
+      which matters because copied text often carries a trailing space.
+
+  if not ip: return
+      An empty box means you pressed Enter by accident. "return" leaves
+      the function immediately, doing nothing.
+
+  THE VALIDATION GATE:
+
+    try:
+        ipaddress.ip_address(ip)
+    except ValueError:
+        ...print an error and return
+
+  ipaddress.ip_address() tries to interpret the text as an IP address. If
+  it can't, it raises a ValueError and the function returns without ever
+  reaching the network call.
+
+  This is the security control in the script. Read the order carefully:
+  validate first, return on failure, and only then make the request.
+  Nothing that is not a real IP address ever reaches AbuseIPDB.
+
+  It rejects hostnames too (evil.example.com is not an IP address), which
+  is deliberate. Internal hostnames say plenty about a network on their
+  own, and they are not what this tool is for.
+
+  Note that the result of ip_address() is thrown away. The script isn't
+  using the value, only finding out whether the text was valid. Using a
+  function purely for whether it succeeds is a normal pattern.
+
+  button.config(state=tk.DISABLED)
+      Grey out the Scan button so you can't fire off five lookups while
+      the first is still running.
+
+  def on_done() inside submit()
+      A function defined inside another function. This one can see
+      "button" and "entry" from the function it sits in, so it doesn't
+      need them passed in. It gets handed to run_scan, which calls it when
+      the lookup finishes, whatever the outcome.
+
+  Thread(target=run_scan, args=(...), daemon=True).start()
+      target   The function to run on the new thread. No brackets: you
+               are handing over the function, not calling it.
+      args     A tuple of values to pass to it.
+      daemon   True means "don't keep the program alive for this". Without
+               it, closing the window can leave the process running in the
+               background, invisible, until the request finishes.
+      .start() Actually begins it. Creating a Thread doesn't run it.
+
+  WHY A THREAD AT ALL: a web request can take seconds. Tkinter draws the
+  window from the main thread, so if the main thread is sat waiting for
+  AbuseIPDB, the window stops redrawing. It greys out and Windows offers
+  to close it for you. Putting the wait on another thread keeps the window
+  alive and responsive.
+
+
+------------------------------------------------------------
+PART 9: BUILDING THE WINDOW
+------------------------------------------------------------
+
+    if __name__ == "__main__":
+
+  True when you run this file directly, false when another file imports
+  it. It means "only build a window if someone actually ran this script".
+
+    root = tk.Tk()
+    root.title("IP Scanner (AbuseIPDB)")
+    root.geometry("500x500")
+
+  tk.Tk() creates the window itself. Everything else goes inside it.
+  .title() sets the text in the title bar. .geometry() sets the starting
+  size in pixels, width by height.
+
+    bar = tk.Frame(root)
+    bar.pack(fill=tk.X, padx=5, pady=5)
+    tk.Label(bar, text="IP:").pack(side=tk.LEFT)
+    entry = tk.Entry(bar, font=("Courier", 10))
+    entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+    button = tk.Button(bar, text="Scan")
+    button.pack(side=tk.LEFT)
+
+  A Frame is an invisible box used to group widgets. This one holds the
+  input row so the label, box and button sit together on one line.
+
+  Every widget takes its parent as the first argument: tk.Label(bar, ...)
+  puts the label inside the bar, and the bar is inside root. Widgets nest.
+
+  .pack() is what actually makes a widget appear. Creating it isn't
+  enough. pack() decides where it goes:
+      side=tk.LEFT   line these up left to right
+      fill=tk.X      stretch horizontally to fill the space
+      expand=True    take any spare space going (so the input box grows
+                     when the window is resized, and the button doesn't)
+      padx, pady     pixels of breathing room around the widget
+
+    text = scrolledtext.ScrolledText(root, bg='black', fg='light green', ...)
+    text.pack(fill=tk.BOTH, expand=True)
+    text.config(state=tk.DISABLED)
+
+  The results box. bg is background, fg is foreground (the text). Black
+  with green text is a terminal look. Courier is a monospace font, which
+  keeps the indented JSON lined up.
+
+  fill=tk.BOTH with expand=True means it takes all remaining space in both
+  directions and grows with the window.
+
+  It starts DISABLED, which is read-only. update_text() unlocks it for
+  each write.
+
+    button.config(command=lambda: submit(entry, button, text))
+    entry.bind("<Return>", lambda event: submit(entry, button, text))
+    entry.focus_set()
+
+  command= is the function to run when the button is clicked. It is set
+  here rather than when the button was created, because it refers to
+  "text", which didn't exist yet at that point.
+
+  lambda makes a small unnamed function on the spot. You need one here
+  because command= wants a function to call later, but submit needs three
+  arguments. Writing command=submit(entry, button, text) would call submit
+  immediately and hand the button the result, which is not what you want.
+  The lambda wraps the call so it happens on click instead.
+
+  .bind("<Return>", ...) connects a key to a function. <Return> is the
+  Enter key. Key bindings hand an "event" object to the function, which
+  this one doesn't need, hence the "lambda event:" that ignores it.
+
+  .focus_set() puts the cursor in the input box at startup, so you can
+  type straight away without clicking first.
+
+    root.mainloop()
+
+  Starts the window and hands control to tkinter. From here the script
+  sits in a loop watching for clicks and keypresses, running the functions
+  connected to them. It doesn't return until the window is closed. Any
+  code after this line would not run until then.
+
+
+------------------------------------------------------------
+THE WHOLE FLOW IN ONE PICTURE
+------------------------------------------------------------
+
+  You type 198.51.100.42 and press Enter
+
+      |
+      v
+  submit()  -- reads the box, strips spaces
+      |
+      v
+  ipaddress.ip_address()  -- valid?
+      |                        |
+      | yes                    | no -> print an error, stop here.
+      |                                Nothing is sent.
+      v
+  Disable the button, print "> scanning ...", clear the box
+      |
+      v
+  Start a background thread  ---->  run_scan()
+      |                                 |
+      | window stays responsive         v
+      |                             scan_ip() -> AbuseIPDB
+      |                                 |
+      |                                 v
+      |                             errors in the response?
+      |                                 |         |
+      |                                 | yes     | no
+      |                                 v         v
+      |                             print it   pull out 7 fields
+      |                                 |         |
+      |                                 +----+----+
+      |                                      |
+      |                                      v
+      |                                  post() -> .after() hands the
+      |                                            text back to the
+      v                                            main thread
+  Main thread writes it into the box, re-enables the button
+
+
+------------------------------------------------------------
+PYTHON CONCEPTS USED (quick reference)
+------------------------------------------------------------
+
+  import              Load code from another module
+  import x as y       Load it under a shorter name
+  from x import y     Take one thing out of a module
+  variable            A name that stores a value: ip = "8.8.8.8"
+  dictionary          Labelled values: {"Key": "abc", "Accept": "json"}
+  .get("k", default)  Read from a dictionary without crashing if absent
+  list                Ordered collection: [1, 2, 3]
+  tuple               Fixed group of values: (widget, ip, on_done)
+  f-string            f"Error: {e}" puts variables into text
+  def                 Create a function
+  return              Hand a value back, and stop running the function
+  nested function     A function defined inside another one
+  lambda              A small unnamed function written inline
+  try / except        Handle errors without crashing
+  finally             Run this either way
+  raise / ValueError  How Python signals bad input
+  for loop            Repeat for each item
+  if not x            True when x is empty, zero or missing
+  threads             Run something without blocking the rest
+  daemon thread       One that doesn't keep the program alive
+  os.environ.get()    Read a setting from outside the file
+  __name__            Tells you if this file was run or imported
+  widget              One piece of a window
+  event loop          mainloop(), which waits for and dispatches input

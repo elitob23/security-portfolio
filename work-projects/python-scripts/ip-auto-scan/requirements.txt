@@ -1,0 +1,21 @@
+# Requirements for ipautoscan.py
+#
+# Python 3.10+ is required.
+#
+# Third-party packages:
+#   requests==2.34.2    # ipautoscan.py - calls the AbuseIPDB v2 API
+#
+# Standard library only, no install needed:
+#   ipaddress, json, os, threading, tkinter
+#
+# tkinter ships with the official python.org Windows and macOS installers.
+# On Debian/Ubuntu it is a separate package:
+#   sudo apt install python3-tk
+#
+# Also required, but not a package:
+#   An AbuseIPDB API key in the ABUSEIPDB_API_KEY environment variable.
+#   Free key: https://www.abuseipdb.com/account/api
+#
+# Install with:
+#   pip install -r requirements.txt
+requests==2.34.2
