@@ -1,6 +1,6 @@
 # security-portfolio
 
-This is where I keep the security work I'm actually proud of. Industry-backed projects, as well as projects I have completed on my own time.
+This is where I keep the security work I'm actually proud of. Industry backed projects, as well as projects I have completed on my own time.
 
 <img width="300" height="300" alt="nxKX671" src="https://github.com/user-attachments/assets/aa85b826-0041-42b3-955b-77938cfe494f" />
 
