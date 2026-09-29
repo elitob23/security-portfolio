@@ -10,6 +10,8 @@
 
 Replaced standing privileged access with time-boxed, MFA-protected, just-in-time elevation using CrowdStrike Falcon, Active Directory security groups, Microsoft Entra ID, and Microsoft Teams.
 
+**Author:** Elias Tobin
+
 [← Back to portfolio home](../../README.md)
 
 ## Situation
