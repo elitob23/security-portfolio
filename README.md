@@ -10,7 +10,9 @@ This is where I keep the security work I'm actually proud of. Industry backed pr
 
 **Core Competencies:** Identity and Access Management, Vulnerability Management, SIEM (CrowdStrike Falcon Next-Gen SIEM, Wazuh), Endpoint Detection & Response (CrowdStrike Falcon), SOAR / Security Automation (Falcon Fusion), Network Security, Threat Hunting, Scripting (PowerShell, Python), Ethical Hacking (HackTheBox)
 
-**Education:** Diploma in IT System Administration (With Honors)
+**Education:**
+- B.S. Cybersecurity & Information Assurance, Western Governors University (WGU), starting January 2027
+- Diploma in IT System Administration (With Honors)
 
 **Active Qualifications:** [CCNA](https://www.credly.com/badges/8d46b3aa-948c-4b5d-b7a3-601fb8a5f801/public_url), CompTIA Network+, CompTIA A+
 
