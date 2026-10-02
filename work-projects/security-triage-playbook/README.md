@@ -6,8 +6,6 @@ A collection of practical, ground-up triage playbooks for security analysts. Eac
 
 [← Back to portfolio home](../../README.md)
 
-<img width="700" height="500" alt="image" src="https://github.com/user-attachments/assets/cf88292b-89d4-4ba8-bb4f-5815eb5e1b6d" />
-
 ## Why these playbooks?
 
 Most security documentation is either too academic or buried in a vendor manual. These focus on practical application:
