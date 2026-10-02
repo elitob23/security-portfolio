@@ -1,0 +1,272 @@
+HOW PRIVESC-DETECTION.CQL WORKS
+===============================
+
+A plain-English walkthrough of the query, top to bottom.
+
+
+------------------------------------------------------------
+THE BIG IDEA
+------------------------------------------------------------
+
+An attacker with a stolen password usually can't do much damage at
+first, because the account isn't an admin. So they:
+
+  1. Log on to a machine remotely with the stolen account.
+  2. Open a shell (cmd or PowerShell) and look around.
+  3. Find a way to get a shell running as a more powerful account,
+     often by abusing a program that already runs as SYSTEM or admin.
+
+Each of those is normal on its own. Admins log on remotely and open
+shells all day. The query looks for all three happening on the SAME
+computer, in that ORDER, close together, with the user CHANGING between
+step 2 and step 3.
+
+The query does four things:
+  1. Tags each event as stage 1, 2 or 3.
+  2. Throws away every computer that doesn't have all three stages.
+  3. Groups each computer's events into bursts of activity.
+  4. Checks the users and the order inside each burst.
+
+
+------------------------------------------------------------
+HOW CQL READS A QUERY
+------------------------------------------------------------
+
+CQL works like a conveyor belt. Events come in at the top, and each line
+does one job to them before passing them down. The | (pipe) character
+separates each step.
+
+Lines starting with // are comments. CQL ignores them.
+
+
+------------------------------------------------------------
+WINDOWS INTEGRITY LEVELS
+------------------------------------------------------------
+
+Every Windows process runs at an "integrity level", which says how much
+it's trusted. Falcon records it as a number:
+
+    4096   (0x1000)  Low       sandboxed, e.g. some browser tabs
+    8192   (0x2000)  Medium    a normal user's programs
+   12288   (0x3000)  High      "Run as administrator"
+   16384   (0x4000)  System    Windows services, SYSTEM account
+   20480   (0x5000)  Protected special protected processes
+
+The query uses these numbers to tell elevated and non-elevated
+processes apart:
+
+    below 12288           = NOT elevated  (stage 2)
+    12288 up to 20479     = elevated, High or System  (stage 3)
+
+
+------------------------------------------------------------
+PART 1: PICKING THE EVENTS
+------------------------------------------------------------
+
+    #repo="base_sensor" event_platform="Win"
+    | in(field=#event_simpleName, values=["UserLogon", "ProcessRollup2"])
+
+  #repo="base_sensor"
+      Only look at Falcon sensor data.
+
+  event_platform="Win"
+      Only Windows computers.
+
+  in(field=#event_simpleName, values=[...])
+      Keep only two event types:
+        UserLogon       someone logged on
+        ProcessRollup2  a program started
+
+
+------------------------------------------------------------
+PART 2: TAGGING THE THREE STAGES
+------------------------------------------------------------
+
+  The case { ... } block is like an if / else-if chain. Each event goes
+  down the list and takes the FIRST branch it matches. An event that
+  matches no branch is dropped.
+
+  Each branch copies the useful fields into new names (with :=) and sets
+  a "flag" field to "true" so later steps know which stage it was.
+
+  --- Stage 1: remote logon ---
+
+    #event_simpleName="UserLogon" LogonType=/^(3|10)$/ RemoteAddressIP4=*
+
+  LogonType=/^(3|10)$/
+      Logon type 3 is a network logon (e.g. connecting to a file share or
+      running a remote command). Type 10 is RDP. ^ and $ make sure the
+      value is exactly 3 or 10, not 13 or 30.
+
+  RemoteAddressIP4=*
+      There must be a remote IP address. * means "has any value".
+
+  remLogon := format("[conn] %s -> %s", field=[RemoteAddressIP4, LocalIP])
+      Builds a readable string like "[conn] 10.0.0.5 -> 10.0.0.20".
+      Each %s is filled in from the field list, in order.
+
+  Flag set: successLogon := "true"
+
+  --- Stage 2: non-elevated shell ---
+
+    #event_simpleName="ProcessRollup2" IntegrityLevel>0 IntegrityLevel<12288
+    ParentBaseFileName=/(cmd|powershell|explorer|pwsh|powershell_ise)\.exe$/i
+    ImageFileName!=/(\\(Program\ Files|Program\ Files\ \(x86\))\\)(.*\.(exe|dll)$)/i
+
+  IntegrityLevel>0 IntegrityLevel<12288
+      Not elevated (Low or Medium).
+
+  ParentBaseFileName=/(cmd|powershell|...)\.exe$/i
+      The program was started FROM a shell or from Explorer. In other
+      words, a person (or attacker) typed or clicked to run it.
+
+  ImageFileName!=/...Program Files.../i
+      != means "does NOT match". Drops normal installed applications so
+      the stage focuses on things run from odd locations or built-in
+      Windows tools.
+
+  There's also a ParentBaseFileName!=CSFalconService line. It never
+  changes the result, because the line above already only allows shell
+  parents, but it's harmless.
+
+  Flag set: lowPrivExec := "true"
+
+  --- Stage 3: elevated shell ---
+
+    #event_simpleName="ProcessRollup2" IntegrityLevel>=12288 IntegrityLevel<20480
+    ImageFileName=/.*\\(cmd|powershell|pwsh|powershell_ise)\.exe$/i
+    ParentBaseFileName!=/(explorer|cmd|powershell|CSFalconService|RuntimeBroker|svchost|SenseIR|WmiPrvSE)\.exe/i
+    UserName!=/\$/ ParentBaseFileName=*
+
+  IntegrityLevel>=12288 IntegrityLevel<20480
+      Elevated: High or System.
+
+  ImageFileName=/...(cmd|powershell|...)\.exe$/i
+      The elevated process IS a shell.
+
+  ParentBaseFileName!=/(explorer|cmd|...)\.exe/i
+      Drop shells started by the usual, legitimate launchers. An admin
+      clicking "Run as administrator" comes from explorer. Falcon's own
+      Real Time Response comes from CSFalconService. Defender's
+      investigations come from SenseIR. What's left is an elevated shell
+      started by some OTHER program, which is the interesting case.
+
+  UserName!=/\$/
+      Drop machine accounts. Computer accounts in Active Directory end in
+      $ (e.g. WORKSTATION01$).
+
+  ParentBaseFileName=*
+      There must be a known parent.
+
+  highParent := ParentBaseFileName
+      Saved because it's the most important triage field: WHICH program
+      handed out the elevated shell.
+
+  Flag set: highPrivExec := "true"
+
+
+------------------------------------------------------------
+PART 3: KEEP ONLY COMPUTERS WITH ALL THREE STAGES
+------------------------------------------------------------
+
+    | selfJoinFilter(field=[aid],
+        where=[
+            { successLogon="true" },
+            { lowPrivExec="true" },
+            { highPrivExec="true" }
+        ]
+    )
+
+  aid is Falcon's unique ID for each computer.
+
+  selfJoinFilter looks at every computer and asks: "does this computer
+  have at least one event matching EACH of these three conditions?" If
+  yes, all of that computer's events are kept. If any stage is missing,
+  all of its events are dropped.
+
+  THE ANALOGY: Checking a stack of receipts per customer and keeping
+  only the customers who bought a ticket AND a drink AND popcorn.
+
+  This is a cheap way to throw away most of the data before the
+  expensive grouping in the next step.
+
+
+------------------------------------------------------------
+PART 4: MAKING TIMESTAMPS READABLE
+------------------------------------------------------------
+
+    | logonTimef := formatTime("%Y/%m/%d %H:%M:%S", field=logonTime)
+
+  Timestamps are stored as big numbers (milliseconds since 1970). This
+  turns them into something like "2026/09/14 13:42:07" for the output.
+  The raw numbers are kept too, because the order checks in Part 6 need
+  to compare them.
+
+
+------------------------------------------------------------
+PART 5: GROUPING INTO BURSTS OF ACTIVITY
+------------------------------------------------------------
+
+    | groupBy([aid],
+        function=[
+        session(
+            [ collect([...], limit=5000),
+              min(lowPrivTime, as="minLowPrivTime"),
+              min(highPrivTime, as="minHighPrivTime"),
+              min(logonTime, as="minLogonTime") ],
+            maxpause=10m
+        )
+        ]
+    )
+
+  groupBy([aid], ...)
+      Work on each computer separately.
+
+  session(..., maxpause=10m)
+      Splits each computer's events into "sessions". A new session starts
+      whenever there's a gap of more than 10 minutes with no events. So a
+      logon at 9:00, a shell at 9:04 and an elevated shell at 9:12 are one
+      session. If the elevated shell had come at 9:30, it would be in a
+      separate session and wouldn't be linked.
+
+  collect([...])
+      Gathers all the values of each listed field from the session into
+      one row.
+
+  min(..., as=...)
+      The EARLIEST time of each stage in the session. Used for the order
+      checks.
+
+
+------------------------------------------------------------
+PART 6: THE CHECKS
+------------------------------------------------------------
+
+    | highParent=*
+      There must be an elevated shell with a known parent.
+
+    | test(loggedUser==lowPrivUser)
+      The person who logged on is the person who ran the non-elevated
+      shell. This ties stage 1 to stage 2.
+
+    | test(highPrivUser!=lowPrivUser)
+      The elevated shell is running as SOMEONE ELSE. This is the
+      escalation: a different, more powerful account.
+
+    | test(minLogonTime<minLowPrivTime)
+    | test(minLowPrivTime<minHighPrivTime)
+      Logon came first, then the normal shell, then the elevated shell.
+      test() lets you compare two fields, which a plain filter can't do.
+
+    | formatDuration(_duration, precision=3, as="sessionDuration")
+    | sessionDurationMin := _duration/(1000*60)
+    | sessionDurationMin>1
+      _duration is how long the session lasted, in milliseconds. Dividing
+      by 1000*60 converts it to minutes. Sessions of one minute or less
+      are dropped, on the assumption that a person hunting for a way to
+      escalate takes longer than that.
+
+    | drop([_duration, @timestamp])
+      Removes fields that aren't needed in the output.
+
+  Whatever survives all of this is an alert.
