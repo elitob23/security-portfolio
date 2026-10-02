@@ -99,6 +99,7 @@ Credentials and API keys are never hardcoded. Scripts that need them read from e
 
 ## Related Projects
 
+- [PowerShell Scripts](../powershell-scripts): the PowerShell side of my security tooling
 - [Critical Vulnerability Management](../vulnerability-management): PowerShell remediation scripts deployed through CrowdStrike RTR
 - [Domain-Wide Password Policy Overhaul](../password-policy): PowerShell and GPO rollout
 - [CrowdStrike Query Language (CQL)](../cql-queries): detection and hunting queries

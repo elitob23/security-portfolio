@@ -39,6 +39,7 @@ Each project folder includes a full README covering the problem, approach, techn
 | [CrowdStrike Query Language (CQL)](work-projects/cql-queries) | CQL Queries for detection engineering, threat hunting, and investigation in CrowdStrike Falcon Next-Gen SIEM | ✅ Complete |
 | [SOAR Automation](work-projects/SOAR-Automation) | Falcon Fusion SOAR workflows that automatically triage, notify on, and contain detections, starting with Falcon OverWatch detections | ✅ Complete |
 | [Python Scripts](work-projects/python-scripts) | Python scripts for security operations: automation, data pulls from security tools, and investigation support | ✅ Complete |
+| [PowerShell Scripts](work-projects/powershell-scripts) | PowerShell scripts for security operations: Active Directory password enforcement and vulnerable software remediation deployed through CrowdStrike RTR | ✅ Complete |
 
 
 ## Homelab
