@@ -38,7 +38,7 @@ Each project folder includes a full README covering the problem, approach, techn
 | [Security Triage Playbook](work-projects/security-triage-playbook) | Analyst triage playbooks for the detections I work most: what each alert means, the first three checks, false positive patterns, and the escalation threshold | ✅ Complete |
 | [CrowdStrike Query Language (CQL)](work-projects/cql-queries) | CQL Queries for detection engineering, threat hunting, and investigation in CrowdStrike Falcon Next-Gen SIEM | ✅ Complete |
 | [SOAR Automation](work-projects/SOAR-Automation) | Falcon Fusion SOAR workflows that automatically triage, notify on, and contain detections, starting with Falcon OverWatch detections | ✅ Complete |
-| [Python Scripts](work-projects/python-scripts) | Python scripts for security operations: automation, data pulls from security tools, and investigation support | In Progress |
+| [Python Scripts](work-projects/python-scripts) | Python scripts for security operations: automation, data pulls from security tools, and investigation support | ✅ Complete |
 
 
 ## Homelab
