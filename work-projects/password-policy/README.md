@@ -4,8 +4,6 @@
 
 [← Back to portfolio home](../../README.md)
 
-<img width="767" height="400" alt="image" src="https://github.com/user-attachments/assets/6d796e3a-e578-4b22-9c38-3939b21a4d96" />
-
 ## Situation
 Identity and Access Management. Existing password policy (10 characters,
 90-day rotation) left the environment exposed to credential-based attacks
