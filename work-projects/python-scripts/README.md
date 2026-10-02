@@ -1,5 +1,7 @@
 # python-scripts
 
+<img width="900" alt="Python Scripts banner listing the scripts in this folder" src="banner.svg" />
+
 A working collection of Python scripts I've written for security operations work: automating repetitive tasks, pulling and shaping data from security tools, and supporting investigations.
 
 **Author:** Elias Tobin

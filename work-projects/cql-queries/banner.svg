@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="260" viewBox="0 0 900 260" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-label="CrowdStrike Query Language: Detection engineering · threat hunting · investigation in Falcon NG-SIEM">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0f19"/>
+      <stop offset="1" stop-color="#17112a"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a371f7"/>
+      <stop offset="1" stop-color="#d2a8ff"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="900" height="260" rx="14" fill="url(#bg)"/>
+
+  <g transform="translate(60,54)"><line x1="8" y1="24" x2="110" y2="24" stroke="#3a3f4f" stroke-width="5" stroke-linecap="round"/><line x1="8" y1="46" x2="80" y2="46" stroke="#3a3f4f" stroke-width="5" stroke-linecap="round"/><line x1="8" y1="68" x2="104" y2="68" stroke="#3a3f4f" stroke-width="5" stroke-linecap="round"/><line x1="8" y1="90" x2="60" y2="90" stroke="#3a3f4f" stroke-width="5" stroke-linecap="round"/><line x1="8" y1="112" x2="92" y2="112" stroke="#3a3f4f" stroke-width="5" stroke-linecap="round"/><circle cx="58" cy="70" r="30" fill="#0b0f19" stroke="#a371f7" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><line x1="80" y1="92" x2="108" y2="122" stroke="#a371f7" stroke-width="8" stroke-linecap="round"/><path d="M44 70 h28 M58 56 v28" stroke="#f5f5f7" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+
+  <text x="220" y="86" fill="#f5f5f7" font-size="34" font-weight="700">CrowdStrike Query Language</text>
+  <text x="221" y="118" fill="#a9adbb" font-size="17">Detection engineering · threat hunting · investigation in Falcon NG-SIEM</text>
+
+  <g font-family="Consolas, ui-monospace, Menlo, monospace" font-size="13"><rect x="220" y="172" width="161" height="32" rx="16" fill="#a371f7" fill-opacity="0.14" stroke="#a371f7" stroke-opacity="0.55"/><text x="300.5" y="193" fill="#d2a8ff" text-anchor="middle">privesc-detection</text><rect x="393" y="172" width="161" height="32" rx="16" fill="#a371f7" fill-opacity="0.14" stroke="#a371f7" stroke-opacity="0.55"/><text x="473.5" y="193" fill="#d2a8ff" text-anchor="middle">shieldbreak-hosts</text><rect x="566" y="172" width="90" height="32" rx="16" fill="#a371f7" fill-opacity="0.14" stroke="#a371f7" stroke-opacity="0.55"/><text x="611" y="193" fill="#d2a8ff" text-anchor="middle">ai-usage</text><rect x="668" y="172" width="90" height="32" rx="16" fill="#a371f7" fill-opacity="0.14" stroke="#a371f7" stroke-opacity="0.55"/><text x="713" y="193" fill="#d2a8ff" text-anchor="middle">w11-24h2</text></g>
+</svg>

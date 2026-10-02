@@ -1,5 +1,7 @@
 # SOAR Automation
 
+<img width="900" alt="SOAR Automation banner showing the automated OverWatch detection, triage, notification, and containment flow" src="banner.svg" />
+
 CrowdStrike Falcon Fusion SOAR workflows I've built to automate detection response: moving detections into triage, notifying analysts, and containing hosts when it's safe to do so.
 
 [← Back to portfolio home](../../README.md)

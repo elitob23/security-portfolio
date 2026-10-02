@@ -1,5 +1,7 @@
 # powershell-scripts
 
+<img width="900" alt="PowerShell Scripts banner listing the scripts in this folder" src="banner.svg" />
+
 A collection of the PowerShell scripts I've written for security operations work: identity changes in Active Directory and remediating vulnerable software across the endpoint fleet.
 
 **Author:** Elias Tobin

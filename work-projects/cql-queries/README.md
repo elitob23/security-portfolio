@@ -1,5 +1,7 @@
 # cql-queries
 
+<img width="900" alt="CrowdStrike Query Language banner listing the queries in this folder" src="banner.svg" />
+
 A working collection of CrowdStrike Query Language (CQL) queries used for detection engineering, threat hunting, and investigation in CrowdStrike Falcon Next-Gen SIEM.
 
 [← Back to portfolio home](../../README.md)

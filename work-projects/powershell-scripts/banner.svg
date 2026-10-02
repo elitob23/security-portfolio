@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="260" viewBox="0 0 900 260" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-label="PowerShell Scripts: Active Directory enforcement and vulnerable software removal via Falcon RTR">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0f19"/>
+      <stop offset="1" stop-color="#0c1426"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2671be"/>
+      <stop offset="1" stop-color="#5391fe"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="900" height="260" rx="14" fill="url(#bg)"/>
+
+  <g transform="translate(60,54)"><rect x="0" y="24" width="120" height="104" rx="10" stroke="#2671be" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" fill="none"/><line x1="0" y1="48" x2="120" y2="48" stroke="#2671be" stroke-width="4"/><circle cx="14" cy="36" r="4" fill="#5391fe"/><circle cx="28" cy="36" r="4" fill="#f5f5f7"/><circle cx="42" cy="36" r="4" fill="#6b7080"/><text x="16" y="98" fill="#f5f5f7" font-family="Consolas, ui-monospace, Menlo, monospace" font-size="30" font-weight="700">PS&gt;</text></g>
+
+  <text x="220" y="86" fill="#f5f5f7" font-size="34" font-weight="700">PowerShell Scripts</text>
+  <text x="221" y="118" fill="#a9adbb" font-size="17">Active Directory enforcement and vulnerable software removal via Falcon RTR</text>
+
+  <g font-family="Consolas, ui-monospace, Menlo, monospace" font-size="13"><rect x="220" y="172" width="168" height="32" rx="16" fill="#2671be" fill-opacity="0.14" stroke="#2671be" stroke-opacity="0.55"/><text x="304" y="193" fill="#5391fe" text-anchor="middle">passwordchange.ps1</text><rect x="400" y="172" width="176" height="32" rx="16" fill="#2671be" fill-opacity="0.14" stroke="#2671be" stroke-opacity="0.55"/><text x="488" y="193" fill="#5391fe" text-anchor="middle">microsoft-teams.ps1</text><rect x="588" y="172" width="90" height="32" rx="16" fill="#2671be" fill-opacity="0.14" stroke="#2671be" stroke-opacity="0.55"/><text x="633" y="193" fill="#5391fe" text-anchor="middle">zoom.ps1</text><rect x="690" y="172" width="137" height="32" rx="16" fill="#2671be" fill-opacity="0.14" stroke="#2671be" stroke-opacity="0.55"/><text x="758.5" y="193" fill="#5391fe" text-anchor="middle">office2007.ps1</text></g>
+</svg>

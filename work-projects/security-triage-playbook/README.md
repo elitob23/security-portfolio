@@ -1,5 +1,7 @@
 # Security Triage & Incident Response Playbooks
 
+<img width="900" alt="Security Triage Playbooks banner showing the detection, first checks, false positive, and escalation flow" src="banner.svg" />
+
 A collection of practical, ground-up triage playbooks for security analysts. Each one gives an actionable, structured workflow for investigating, escalating, or safely closing a common security detection.
 
 [← Back to portfolio home](../../README.md)

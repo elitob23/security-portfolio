@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="260" viewBox="0 0 900 260" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-label="Domain-Wide Password Policy: NIST 800-63B aligned · forced change across 300+ accounts · zero lockouts">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0f19"/>
+      <stop offset="1" stop-color="#1c1810"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e3a008"/>
+      <stop offset="1" stop-color="#ffd166"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="900" height="260" rx="14" fill="url(#bg)"/>
+
+  <g transform="translate(60,54)"><path d="M34 64 V44 a26 26 0 0 1 52 0 V64" stroke="#e3a008" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" fill="none"/><rect x="18" y="64" width="84" height="74" rx="12" stroke="#e3a008" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" fill="none"/><circle cx="60" cy="95" r="9" fill="#f5f5f7"/><line x1="60" y1="102" x2="60" y2="118" stroke="#f5f5f7" stroke-width="5" stroke-linecap="round"/></g>
+
+  <text x="220" y="86" fill="#f5f5f7" font-size="34" font-weight="700">Domain-Wide Password Policy</text>
+  <text x="221" y="118" fill="#a9adbb" font-size="17">NIST 800-63B aligned · forced change across 300+ accounts · zero lockouts</text>
+
+  <g transform="translate(220,160)" font-size="15"><rect x="0" y="0" width="250" height="56" rx="10" fill="none" stroke="#3a3f4f" stroke-width="2"/><text x="125" y="-8" fill="#6b7080" text-anchor="middle" font-size="12" letter-spacing="1.5">BEFORE</text><text x="125" y="34" fill="#6b7080" text-anchor="middle">10 characters · 90-day rotation</text><line x1="22" y1="29" x2="228" y2="29" stroke="#6b7080" stroke-width="2"/><path d="M272 28 H330 M318 18 L332 28 L318 38" stroke="#ffd166" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="352" y="0" width="310" height="56" rx="10" fill="#e3a008" fill-opacity="0.14" stroke="#e3a008" stroke-width="2"/><text x="507" y="-8" fill="#ffd166" text-anchor="middle" font-size="12" letter-spacing="1.5" font-weight="600">AFTER</text><text x="507" y="34" fill="#f5f5f7" text-anchor="middle" font-weight="600">15-character minimum · no forced expiry</text></g>
+</svg>

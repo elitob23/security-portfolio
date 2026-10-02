@@ -1,5 +1,7 @@
 # 300+ User Domain-Wide Password Policy Overhaul
 
+<img width="900" alt="Domain-Wide Password Policy banner showing the move from 10 characters with 90-day rotation to a 15-character minimum with no forced expiry" src="banner.svg" />
+
 [← Back to portfolio home](../../README.md)
 
 <img width="767" height="400" alt="image" src="https://github.com/user-attachments/assets/6d796e3a-e578-4b22-9c38-3939b21a4d96" />
