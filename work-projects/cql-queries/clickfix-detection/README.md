@@ -1,5 +1,7 @@
 # clickfix-detection
 
+<img width="900" alt="ClickFix Detection banner showing the parent, child, pattern label and investigation flow" src="banner.svg" />
+
 A scheduled detection in Falcon Next-Gen SIEM for ClickFix attacks on Windows hosts. It flags a shell or LOLBin started directly by a browser, an Office app, a PDF reader or Explorer, and labels each alert with the ClickFix command-line pattern it matches. It comes with five investigation queries that build out the context around an alert.
 
 Detection query: [`clickfix-detection.cql`](clickfix-detection.cql)

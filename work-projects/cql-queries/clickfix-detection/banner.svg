@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="260" viewBox="0 0 900 260" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-label="ClickFix Detection: browser or Explorer launching a shell, labeled by ClickFix pattern, then investigated with five follow-up queries">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0f19"/>
+      <stop offset="1" stop-color="#1e140c"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f0883e"/>
+      <stop offset="1" stop-color="#ffa657"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="900" height="260" rx="14" fill="url(#bg)"/>
+
+  <!-- Clipboard with a terminal prompt -->
+  <g transform="translate(60,54)"><rect x="10" y="14" width="100" height="134" rx="12" stroke="#f0883e" stroke-width="5" stroke-linejoin="round" fill="none"/><rect x="36" y="2" width="48" height="24" rx="7" fill="#0b0f19" stroke="#f0883e" stroke-width="5" stroke-linejoin="round"/><text x="28" y="96" fill="#f5f5f7" font-family="Consolas, ui-monospace, Menlo, monospace" font-size="30" font-weight="700">&gt;_</text><line x1="30" y1="120" x2="90" y2="120" stroke="#3a3f4f" stroke-width="5" stroke-linecap="round"/></g>
+
+  <text x="220" y="86" fill="#f5f5f7" font-size="34" font-weight="700">ClickFix Detection</text>
+  <text x="221" y="118" fill="#a9adbb" font-size="17">Copy-paste attacks caught by process tree · pattern-labeled · 5 pivot queries</text>
+
+  <!-- Detection flow: parent -> child -> label -> investigate -->
+  <g transform="translate(220,166)" font-size="14">
+    <text x="69" y="-8" fill="#6b7080" text-anchor="middle" font-size="12" letter-spacing="1.5">PARENT</text>
+    <rect x="0" y="0" width="138" height="48" rx="10" fill="none" stroke="#3a3f4f" stroke-width="2"/>
+    <text x="69" y="29" fill="#a9adbb" text-anchor="middle">Browser · Explorer</text>
+    <path d="M143 24 H155 M150 19 L156 24 L150 29" stroke="#ffa657" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <text x="229" y="-8" fill="#6b7080" text-anchor="middle" font-size="12" letter-spacing="1.5">CHILD</text>
+    <rect x="160" y="0" width="138" height="48" rx="10" fill="none" stroke="#3a3f4f" stroke-width="2"/>
+    <text x="229" y="29" fill="#a9adbb" text-anchor="middle">Shell · LOLBin</text>
+    <path d="M303 24 H315 M310 19 L316 24 L310 29" stroke="#ffa657" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <text x="389" y="-8" fill="#6b7080" text-anchor="middle" font-size="12" letter-spacing="1.5">LABEL</text>
+    <rect x="320" y="0" width="138" height="48" rx="10" fill="none" stroke="#3a3f4f" stroke-width="2"/>
+    <text x="389" y="29" fill="#a9adbb" text-anchor="middle" font-family="Consolas, ui-monospace, Menlo, monospace" font-size="13">ClickFixPattern</text>
+    <path d="M463 24 H475 M470 19 L476 24 L470 29" stroke="#ffa657" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <text x="549" y="-8" fill="#ffa657" text-anchor="middle" font-size="12" letter-spacing="1.5" font-weight="600">INVESTIGATE</text>
+    <rect x="480" y="0" width="138" height="48" rx="10" fill="#f0883e" fill-opacity="0.14" stroke="#f0883e" stroke-width="2"/>
+    <text x="549" y="29" fill="#f5f5f7" text-anchor="middle" font-weight="600">5 pivot queries</text>
+  </g>
+</svg>
