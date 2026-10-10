@@ -1,0 +1,272 @@
+HOW CLICKFIX-DETECTION.CQL WORKS
+================================
+
+A plain-English walkthrough of the query, top to bottom.
+
+
+------------------------------------------------------------
+THE BIG IDEA
+------------------------------------------------------------
+
+ClickFix tricks a user into running the attacker's command for them.
+A malicious web page puts a command on the clipboard, then talks the
+user into pasting it into the Windows Run dialog or a terminal.
+
+No exploit and no download. The user ran it, so most defenses let it
+through.
+
+What the attacker can't hide is WHERE the command runs from. A command
+pasted into the Run dialog runs as a child of explorer.exe. A command
+launched from a web page runs as a child of the browser. And the
+command itself usually has a giveaway shape: clipboard calls,
+download-and-run, or scrambled (base64) text.
+
+The query does four things:
+  1. Keeps programs started by a browser, Office, a PDF reader or
+     Explorer.
+  2. Keeps only shells and "living off the land" tools as the child.
+  3. Labels each one with the ClickFix pattern it matches, if any.
+  4. Throws away known legitimate software.
+
+
+------------------------------------------------------------
+HOW CQL READS A QUERY
+------------------------------------------------------------
+
+CQL works like a conveyor belt. Events come in at the top, and each line
+does one job to them before passing them down. The | (pipe) character
+separates each step.
+
+Lines starting with // are comments. CQL ignores them.
+
+
+------------------------------------------------------------
+PART 1: PICKING THE EVENTS
+------------------------------------------------------------
+
+    #event_simpleName=ProcessRollup2 event_platform=Win
+
+  ProcessRollup2
+      Falcon logs one of these every time a program starts. It includes
+      the program, its parent and its full command line.
+
+  event_platform=Win
+      Only Windows computers.
+
+
+------------------------------------------------------------
+PART 2: WHO STARTED IT (THE PARENT)
+------------------------------------------------------------
+
+    | in(ParentBaseFileName, values=["explorer.exe", "chrome.exe", ...],
+         ignoreCase=true)
+
+  in(...)
+      Keeps the event only if the field equals one of the listed values.
+      Much tidier than a long chain of ORs.
+
+  ParentBaseFileName
+      The program that started this one.
+
+  The list is everything a user clicks around in:
+      explorer.exe                          the desktop and the Run dialog
+      chrome / msedge / firefox / iexplore  web browsers
+      WINWORD / EXCEL / POWERPNT            Office
+      AcroRd32 / Acrobat                    PDF readers
+
+  ignoreCase=true
+      Matches "EXPLORER.EXE" and "explorer.exe" alike.
+
+
+------------------------------------------------------------
+PART 3: WHAT GOT STARTED (THE CHILD)
+------------------------------------------------------------
+
+    | in(FileName, values=["powershell.exe", "pwsh.exe", "cmd.exe", ...],
+         ignoreCase=true)
+
+  FileName
+      The program that was started.
+
+  The list is the tools ClickFix payloads use:
+      powershell / pwsh     PowerShell, by far the most common
+      cmd                   Command Prompt
+      mshta                 runs HTML applications, can load from a URL
+      wscript / cscript     run VBScript and JScript files
+      rundll32              runs code inside a DLL
+      certutil              a certificate tool that can also download files
+
+  A browser starting PowerShell is rare in normal use. That pairing
+  alone is worth a look.
+
+
+------------------------------------------------------------
+PART 4: LABELING THE CLICKFIX PATTERNS
+------------------------------------------------------------
+
+  The case { ... } block is like an if / else-if chain. Each event goes
+  down the list and takes the FIRST branch it matches. Branches are
+  separated by ; (semicolons).
+
+  Each branch ends with ClickFixPattern := "..." which writes a label
+  into a new field. := means "set this field to".
+
+  Text between slashes, like /iex|downloadstring/i, is a regex (a search
+  pattern). | inside a regex means "or". The i at the end means ignore
+  case.
+
+  --- Pattern 1: clipboard ---
+
+    CommandLine=/(clip|Set-Clipboard|Get-Clipboard)/i
+
+  The command touches the clipboard. ClickFix commands often clear or
+  overwrite the clipboard afterwards to cover their tracks. The inner
+  case { } sorts these further:
+      also downloads or runs code   -> "Clipboard + execution"
+      also has lure words           -> "Clipboard + lure wording"
+      anything else                 -> "Clipboard"
+
+  --- Pattern 2: scrambled or hidden commands ---
+
+    -e / -enc / -encodedcommand followed by 20+ base64 characters
+        -> "Encoded command"
+
+  PowerShell can take a command as base64 text, so a person reading it
+  can't tell what it does. 20+ characters skips short harmless flags.
+
+    (-w h or -windowstyle hidden) AND (iex or downloadstring)
+        -> "Hidden window + execution"
+
+  A hidden window that also downloads or runs code. Two conditions on
+  the same line both have to match.
+
+  --- Pattern 3: running straight from a URL ---
+
+    mshta ... http(s)://                      -> "mshta URL"
+    certutil ... urlcache or decode ... http  -> "certutil download"
+
+  Two built-in Windows tools being used to fetch and run something from
+  the internet.
+
+  --- Pattern 4: lure wording + download ---
+
+    (verification|captcha|...) AND (iwr|irm|curl ... http|...)
+        -> "Lure wording + download"
+
+  ClickFix commands often carry a harmless-looking trailing comment so
+  the user only sees reassuring text in the Run box. Those words plus a
+  download is a strong sign.
+
+  --- The last branch: * ---
+
+    * | ClickFixPattern := "None"
+
+  * means "anything". It's a catch-all, so events that match NONE of
+  the patterns are still kept, labeled "None".
+
+  This is deliberate. A browser starting a shell is worth a look even
+  when the command line is unfamiliar, and attackers change wording all
+  the time. The label lets the analyst start with the strong matches.
+  Adding | ClickFixPattern!="None" right after the block turns it into
+  a strict filter instead.
+
+
+------------------------------------------------------------
+PART 5: THROWING AWAY KNOWN-GOOD SOFTWARE
+------------------------------------------------------------
+
+    | NOT (
+        (ParentBaseFileName=/^(chrome|msedge)\.exe$/i AND CommandLine=/--type=/i)
+        OR CommandLine=/OneDrive.*FileCoAuth\.exe.*-Embedding/i
+        OR ...
+      )
+
+  NOT ( A OR B OR C ... )
+      Drops the event if it matches ANY of the lines inside.
+
+  AND inside one line
+      Both halves must match. This keeps exclusions narrow. For
+      example, rundll32 is only excluded when it's loading one of a
+      few specific Windows DLLs, not every time.
+
+  What's excluded, and why it looks suspicious without the exclusion:
+
+    Browser extension "native messaging"
+        Browser extensions (Falcon, Adobe Acrobat, Microsoft sign-in,
+        Google Drive) talk to a helper program on the PC. Chrome starts
+        that helper through cmd.exe, so it looks just like
+        "browser -> cmd". The exclusions match the helper's name plus
+        the chrome-extension:// or \\.\pipe\chrome.nativeMessaging
+        text that's always in its command line.
+
+    OneDrive
+        Starts cmd.exe to clean up its own folders.
+
+    rundll32 with standard Windows DLLs
+        shell32, printui (printers), davclnt (WebDAV), dfshim
+        (ClickOnce apps) and powrprof (sleep/hibernate).
+
+    Hardware vendor tools
+        Logitech, Dell Command Update and HP Support Assistant.
+
+    Placeholders (REPLACE_WITH_...)
+        Two exclusions for environment-specific software are left as
+        placeholders. They show the format to copy.
+
+  Exclusions match the COMMAND LINE, not just the parent program.
+  Excluding "chrome.exe" as a parent would hide the very attack the
+  rule exists to catch.
+
+
+------------------------------------------------------------
+PART 6: THE OUTPUT
+------------------------------------------------------------
+
+    | table([@timestamp, ComputerName, UserName, ParentBaseFileName,
+             FileName, ClickFixPattern, CommandLine, ParentProcessId,
+             TargetProcessId, @id])
+
+  Shows one row per suspicious process start, with just the fields
+  needed to triage it.
+
+  TargetProcessId is Falcon's ID for the flagged process. It isn't the
+  Windows PID. It's unique per host, so it's what the investigation
+  queries use to find that exact process's children, network
+  connections, DNS lookups and files.
+
+  Whatever survives all of this is an alert.
+
+
+------------------------------------------------------------
+THE INVESTIGATION QUERIES
+------------------------------------------------------------
+
+  All five are in the investigation/ folder and follow the same shape:
+  pick an event type, narrow to one host, narrow to one process, show a
+  small table.
+
+    01-child-processes.cql
+        ParentProcessId = the alert's TargetProcessId
+        "What did this process start?"  A process's children list it
+        as their parent, which is why it's ParentProcessId here.
+        Each child's own TargetProcessId is in the output, ready to
+        feed into queries 3-5.
+
+    02-process-timeline.cql
+        test(@timestamp >= alert time - 300000) and
+        test(@timestamp <= alert time + 300000)
+        "What else was happening on this machine?"
+        300000 ms is 5 minutes. test() is used because a plain filter
+        can't do arithmetic.
+
+    03-network-connections.cql   (NetworkConnectIP4)
+    04-dns-queries.cql           (DnsRequest)
+    05-files-created.cql         (NewScriptWritten, PeFileWritten,
+                                  DocumentFileWritten)
+        ContextProcessId = the alert's TargetProcessId
+        In these event types, ContextProcessId means "the process that
+        did this".
+
+  Tip: queries 3-5 only cover the one process you give them. If query 1
+  shows that cmd.exe started powershell.exe, the download almost
+  certainly came from powershell.exe. Rerun 3-5 with that child's ID.
